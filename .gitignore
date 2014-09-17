@@ -213,3 +213,10 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+test/in/md syntax.md
+test/in/markdown.md
+test/in/md_blockquote.md
+test/in/README.md
+test/in/test.md
+test/out/output-functions.xml
+test/out/output.xml
