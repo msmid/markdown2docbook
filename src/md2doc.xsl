@@ -28,10 +28,18 @@
         <xsl:result-document href="../test/out/output.xml" format="docbook" method="xml">&LF;
             
                 <xsl:variable name="input" select="md2doc:check-input('../test/in/test.md','utf-8')"/>
-                <xsl:variable name="lines" select="md2doc:tokenize-input($input)"/>
-                <!--<xsl:variable name="raw-xml" select="md2doc:build-raw-xml($lines)"/>-->
-                <xsl:variable name="out" select="md2doc:parse-blockquotes($lines)"/>
+                <xsl:variable name="tokens" select="md2doc:tokenize-input($input)"/>
+                <xsl:variable name="lines" select="md2doc:build-lines($tokens)"/>
+                <xsl:variable name="out" select="md2doc:do-block($lines)"/>
+<!--                <xsl:variable name="out2" select="md2doc:build-HTML($out)"/>-->
+            
+<!--                <xsl:variable name="out2" select="md2doc:parse-blockquotes($lines)"/>-->
+<!--                <xsl:variable name="out" select="md2doc:parse($lines)"/>-->
+            
+            <pre-html>
                 <xsl:copy-of select="$out"/>
+            </pre-html>
+                
             
             <xsl:fallback>
                 <xsl:message>

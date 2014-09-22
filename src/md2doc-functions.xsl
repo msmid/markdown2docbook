@@ -7,7 +7,7 @@
     xmlns:md2doc="http://allwe.cz/ns/markdown2docbook"
     exclude-result-prefixes="xs md2doc"
     version="2.0">
-    
+        
     <!--FUNCTIONS LIBRARY-->
     
     <!-- Function that validates input file -->
@@ -41,63 +41,23 @@
         </xsl:for-each>
     </xsl:function>
     
-    <xsl:function name="md2doc:parse-headers">
+    <!--POZOR: markdown umi escapovat nekolik znaku navic umi i html prevest (kdyz uz do html prevadi)
+    - escapovani by se melo odehrat jeste pred parsingem
+    - otazka co s html v markdownu?
+        - kdyby transformace delale nejdriv html a to do docbooku = problem solved-->
+    
+    <!--  FIRST STEP OF PHASE ONE
+          Firstly, we need to parse block elements  -->
+    <xsl:function name="md2doc:do-block">
         <xsl:param name="lines" as="xs:string*"/>
-        <xsl:for-each select="$lines">
-            <xsl:choose>
-                <xsl:when test="matches(.,'^\n?#')">
-                    <xsl:analyze-string select="." regex="^\n?(#+) *(.+) *">
-                        <xsl:matching-substring>
-                            <xsl:variable name="level" select="if (string-length(regex-group(1)) &lt;= 6)
-                                then string-length(regex-group(1))
-                                else number(6)"/>
-                            <xsl:element name="h{$level}">
-                                <xsl:attribute name="type">atx</xsl:attribute>
-                                <xsl:copy-of select="normalize-space(regex-group(2))"/>
-                            </xsl:element>
-                        </xsl:matching-substring>
-                        <!--<xsl:non-matching-substring>^\n?(#+)(.*?)#+
-                            <xsl:element name="line">
-                                <xsl:value-of select="replace(., '\n',  '')"/>
-                            </xsl:element>
-                        </xsl:non-matching-substring>-->
-                    </xsl:analyze-string>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:analyze-string select="." regex="^\n?(-+?|=+?)$">
-                        <xsl:matching-substring>
-                            <xsl:variable name="level" select="if (matches(.,'=')) then 1 else 2"/>
-                            <xsl:element name="h{$level}">
-                                <xsl:attribute name="type">setext</xsl:attribute>
-                                <xsl:copy-of select="regex-group(1)"/>
-                            </xsl:element>
-                        </xsl:matching-substring>
-                        <xsl:non-matching-substring>
-                            <!--<xsl:message>
-                                <xsl:text>INPUT: </xsl:text><xsl:copy-of select="."/>
-                            </xsl:message>-->
-                            <!--<xsl:choose>
-                                <xsl:when test="matches(.,'^\n')">
-                                    <xsl:element name="line">
-                                        <xsl:value-of select="replace(., '\n',  'newline')"/>
-                                    </xsl:element>
-                                </xsl:when>
-                                <xsl:otherwise>
-                                    <xsl:value-of select="."/>
-                                </xsl:otherwise>
-                            </xsl:choose>-->
-                            <xsl:copy-of select="md2doc:parse-rules(.)"/>
-                        </xsl:non-matching-substring>
-                    </xsl:analyze-string>
-                </xsl:otherwise>
-            </xsl:choose>         
-        </xsl:for-each>
+        <!--EDIT: zde by mohl byt xsl:document-->
+        <xsl:sequence select="md2doc:parse-blockquotes($lines)"/>
     </xsl:function>
     
     <xsl:function name="md2doc:parse-blockquotes">
         <xsl:param name="lines" as="xs:string*"/>
         <xsl:for-each select="$lines">
-<!--            <xsl:copy-of select="."/>-->
+            <!--            <xsl:copy-of select="."/>-->
             <xsl:analyze-string select="." regex="^\n?(\s{{0,3}})&gt;\s?(.*)">
                 <xsl:matching-substring>
                     <xsl:element name="blockquote">
@@ -119,6 +79,7 @@
         </xsl:for-each>
     </xsl:function>
     
+<!--    TODO: ve fazi kde budu prehtml transformovat lze udelat ze z ul ul udelam ul li strukturu-->
     <xsl:function name="md2doc:parse-lists">
         <xsl:param name="lines" as="xs:string*"/>
         <xsl:for-each select="$lines">
@@ -127,24 +88,28 @@
                 <xsl:when test="matches(.,'^\n?\s{0,3}\d+?\.')">
                     <xsl:analyze-string select="." regex="^\n?\s{{0,3}}(\d+?)\.\s(.+|[\r\n\t])$">
                         <xsl:matching-substring>
-                            <xsl:element name="ol">
+                            <!--OL-->
+                            <xsl:element name="li">
+                                <xsl:attribute name="type">ol</xsl:attribute>
                                 <xsl:copy-of select="md2doc:parse-lists(regex-group(2))"/>
-                            </xsl:element>
+                            </xsl:element>         
                         </xsl:matching-substring>
                         <xsl:non-matching-substring>
                             <xsl:copy-of select="md2doc:parse-codeblocks(.)"/>
                         </xsl:non-matching-substring>
-                    </xsl:analyze-string>
+                    </xsl:analyze-string>            
                 </xsl:when>
                 <xsl:otherwise>
                     <xsl:choose>
                         <xsl:when test="matches(.,'^\n?([\*_-] {0,2}){3,}\s*$')">
-                            <xsl:copy-of select="md2doc:parse-rules(.)"/>
+                            <xsl:copy-of select="md2doc:parse-rulers(.)"/>
                         </xsl:when>
                         <xsl:otherwise>
                             <xsl:analyze-string select="." regex="^\n?\s{{0,3}}([\*\+-])\s(.+|[\r\n\t])$">
                                 <xsl:matching-substring>
-                                    <xsl:element name="ul">                                      
+                                    <!--UL-->
+                                    <xsl:element name="li">
+                                        <xsl:attribute name="type">ul</xsl:attribute>
                                         <xsl:copy-of select="md2doc:parse-lists(regex-group(2))"/>
                                     </xsl:element>
                                 </xsl:matching-substring>
@@ -175,7 +140,65 @@
         </xsl:for-each>
     </xsl:function>
     
-    <xsl:function name="md2doc:parse-rules">
+    <xsl:function name="md2doc:parse-headers">
+        <xsl:param name="lines" as="xs:string*"/>
+        <xsl:for-each select="$lines">
+            <xsl:choose>
+                <xsl:when test="matches(.,'^\n?#')">
+                    <xsl:analyze-string select="." regex="^\n?(#+) *(.+) *">
+                        <xsl:matching-substring>
+                            <xsl:variable name="level" select="
+                                if (string-length(regex-group(1)) &lt;= 6)
+                                then string-length(regex-group(1))
+                                else number(6)"/>
+                            <xsl:element name="h{$level}">
+                                <xsl:attribute name="type">atx</xsl:attribute>
+                                <xsl:copy-of select="normalize-space(regex-group(2))"/>
+                            </xsl:element>
+                        </xsl:matching-substring>
+                        <!--<xsl:non-matching-substring>^\n?(#+)(.*?)#+
+                            <xsl:element name="line">
+                                <xsl:value-of select="replace(., '\n',  '')"/>
+                            </xsl:element>
+                        </xsl:non-matching-substring>-->
+                    </xsl:analyze-string>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:analyze-string select="." regex="^\n?(-+?|=+?)$">
+                        <xsl:matching-substring>
+                            <xsl:variable name="level" select="
+                                if (matches(.,'=')) 
+                                then 1 
+                                else 2"/>
+                            <xsl:element name="h{$level}">
+                                <xsl:attribute name="type">setext</xsl:attribute>
+                                <xsl:copy-of select="regex-group(1)"/>
+                            </xsl:element>
+                        </xsl:matching-substring>
+                        <xsl:non-matching-substring>
+                            <!--<xsl:message>
+                                <xsl:text>INPUT: </xsl:text><xsl:copy-of select="."/>
+                            </xsl:message>-->
+                            <!--<xsl:choose>
+                                <xsl:when test="matches(.,'^\n')">
+                                    <xsl:element name="line">
+                                        <xsl:value-of select="replace(., '\n',  'newline')"/>
+                                    </xsl:element>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:value-of select="."/>
+                                </xsl:otherwise>
+                            </xsl:choose>-->
+                            <xsl:copy-of select="md2doc:parse-rulers(.)"/>
+                        </xsl:non-matching-substring>
+                    </xsl:analyze-string>
+                </xsl:otherwise>
+            </xsl:choose>         
+        </xsl:for-each>
+    </xsl:function>
+      
+    <!--TODO: když je text nad třemi - ma to byt h2 ale je to p nasledovany hr. Chce to udelat aby to tak nebylo-->
+    <xsl:function name="md2doc:parse-rulers">
         <xsl:param name="lines" as="xs:string*"/>
         <xsl:for-each select="$lines">
             <xsl:analyze-string select="." regex="^\n?([\*_-] {{0,2}}){{3,}}\s*$">
@@ -203,39 +226,190 @@
         </xsl:for-each>
     </xsl:function>
     
-    <xsl:function name="md2doc:do-block">
-        <xsl:param name="lines" as="xs:string*"/>
-        <xsl:sequence select="md2doc:parse-blockquotes($lines)"/>
+    <!--SECOND STEP OF PHASE ONE
+    After block-level elements, we need to transform inline-level elements.-->  
+    <xsl:function name="md2doc:do-inline">
+        <xsl:param name="parsed-to-block" as="element()*"/>
+<!--        <xsl:sequence select="md2doc:parse-emphasis($parsed-to-block)"/>-->
+        <xsl:copy-of select="$parsed-to-block"/>
+        <!--TODO-->
     </xsl:function>
     
     <xsl:function name="md2doc:parse-emphasis">
         <xsl:param name="parsed-to-block" as="element()*"/>
-        <xsl:for-each select="$parsed-to-block">
-            a
-        </xsl:for-each>
+        <!--<xsl:for-each select="$parsed-to-block">
+            <!-\-TODO-\->
+        </xsl:for-each>-->
     </xsl:function>
     
-    <xsl:function name="md2doc:do-span">
+    <xsl:function name="md2doc:parse-links">
         <xsl:param name="parsed-to-block" as="element()*"/>
-        <xsl:sequence select="md2doc:parse-emphasis($parsed-to-block)"/>
+        <!--<xsl:for-each select="$parsed-to-block">
+            <!-\-TODO
+                1. inline linky
+                2. reference styl linky
+                3. automatic linky
+            -\->
+        </xsl:for-each>-->
     </xsl:function>
     
-    <xsl:function name="md2doc:build-preHTML">
+    <xsl:function name="md2doc:parse-code">
         <xsl:param name="parsed-to-block" as="element()*"/>
-        <xsl:call-template name="md2doc:build-preHTML">
-            <xsl:with-param name="input" select="$parsed-to-block"/>
+        <!--<xsl:for-each select="$parsed-to-block">
+            <!-\-TODO-\->
+        </xsl:for-each>-->
+    </xsl:function>
+    
+    <xsl:function name="md2doc:parse-images">
+        <xsl:param name="parsed-to-block" as="element()*"/>
+        <!--<xsl:for-each select="$parsed-to-block">
+            <!-\-TODO-\->
+        </xsl:for-each>-->
+    </xsl:function>
+    
+    <!--PHASE TWO
+    building formed xml document-->
+    
+    <!--Function that convert processed lines into document-node type temporary tree, which is more suitable for
+    further transformation-->
+    <xsl:function name="md2doc:convert">
+        <xsl:param name="elements" as="element()*"/>
+        <xsl:document>
+        <xsl:copy-of select="$elements"/>
+        </xsl:document>    
+    </xsl:function>
+    
+    <xsl:function name="md2doc:build-HTML">
+        <xsl:param name="parsed-to-block" as="document-node()"/>
+<!--        <xsl:element name="html">-->
+        <xsl:call-template name="md2doc:build-HTML">           
+            <xsl:with-param name="parsed-input" select="$parsed-to-block"/>
         </xsl:call-template>
+<!--        </xsl:element>-->
     </xsl:function>
     
-    <xsl:template name="md2doc:build-preHTML">
-        <xsl:param name="input"/>
-        <xsl:apply-templates select="$input"/>
+    <xsl:template name="md2doc:build-HTML">
+        <xsl:param name="parsed-input"/>
+        <html>
+            <head></head>
+            <body>
+                <xsl:apply-templates select="$parsed-input"/>
+            </body>
+        </html>
     </xsl:template>
     
     <xsl:template match="p">
-        <para><xsl:copy-of select="node()"/></para>
+        <p><xsl:copy-of select="node()"/></p>
     </xsl:template>
     
+    <xsl:template match="code">
+        <pre>
+            <xsl:copy-of select="."/>
+        </pre>
+    </xsl:template>
+    
+    <!--In xhtml blockquote can have only block level element as a child-->
+    <xsl:template match="blockquotex">
+        <blockquote>
+            <p>
+
+            </p>
+        </blockquote>
+    </xsl:template>
+    
+    <!--TRANSFORM LISTU-->
+    <!--EDIT 22/9 - 1607: NEJSPIS TOHLE LZE UDELAT EFEKTIVNEJI PRES FOR-EACH-GROUP-->
+    <!--We need to transform "lined" raw xml document into well-formed document e.g. merge and wrap block elements
+    around their content-->
+    <xsl:key name="kFollowing" match="li[preceding-sibling::*[1][self::li]]"
+        use="generate-id(preceding-sibling::li
+        [not(preceding-sibling::*[1][self::li])][1])"/>
+    
+    <xsl:template match="node()" name="identity">
+        <xsl:copy>
+            <xsl:apply-templates select="node()"/>
+        </xsl:copy>
+    </xsl:template>
+    
+    <xsl:template match="li[not(preceding-sibling::*[1][self::li])]">
+        <xsl:element name="{@type}">
+            <xsl:call-template name="identity"/>
+            <xsl:apply-templates mode="copy" select="key('kFollowing',generate-id())"/>
+        </xsl:element>
+    </xsl:template>
+    
+    <xsl:template match="li[preceding-sibling::*[1][self::li]]"/>
+    
+    <xsl:template match="li" mode="copy">
+        <xsl:call-template name="identity"/>
+    </xsl:template>
+    <!--END-->
+    
+    <!--TRANSFORM LISTU-->
+    <!--<xsl:key name="kFollowing" match="li[preceding-sibling::*[1][self::li]]"
+        use="generate-id(preceding-sibling::li
+        [not(preceding-sibling::*[1][self::li])][1])"/>
+    
+    <xsl:template match="node()" name="identity">
+        <xsl:copy>
+            <xsl:apply-templates select="node()"/>
+        </xsl:copy>
+    </xsl:template>
+    
+    <xsl:template match="li[not(preceding-sibling::*[1][self::li])]">
+        <xsl:element name="{@type}">
+            <xsl:call-template name="identity"/>
+            <xsl:apply-templates mode="copy" select="key('kFollowing',generate-id())"/>
+        </xsl:element>
+    </xsl:template>
+    
+    <xsl:template match="li[preceding-sibling::*[1][self::li]]"/>
+    
+    <xsl:template match="li" mode="copy">
+        <xsl:call-template name="identity"/>
+    </xsl:template>-->
+    <!--END-->
+    
+    <!-- testovací template (stejný jako na hlavním xsl)-->
+    
+    <xsl:output encoding="utf-8" method="xml" indent="yes"/>
+    
+    <xsl:template name="main">
+<!--        <xsl:copy-of select="md2doc:prdik()"/>-->
+<!--        <xsl:copy-of select="md2doc:parse-to-block(md2doc:tokenize-input(md2doc:check-input('../../test.md','utf-8')))"/>-->
+<!--        <xsl:value-of select="if (matches('&lt;', '>')) then 'true' else 'false'"/>        -->
+        
+<!--        <xsl:value-of select="$input" disable-output-escaping="yes"/>-->
+        
+        <!--<xsl:value-of select="$lines"/>-->
+<!--        <xsl:variable name="raw-block-xml" select="md2doc:parse-to-block($lines)"/>-->
+<!--        <xsl:copy-of select="$raw-block-xml"/>-->
+<!--        <xsl:copy-of select="md2doc:build-lines($tokens)"/>-->
+        
+        <!--<xsl:variable name="pom2" select="md2doc:parse-blockquotes($raw-xml)"/>
+        <xsl:variable name="pom1" select="md2doc:parse-headers($raw-xml)"/>
+        <xsl:variable name="out" select="md2doc:parse-lists($raw-xml)"/>-->
+        <!--  Až potud se překlad skládá z dočasného xml, který v následujícím kroku je převeden na html   -->
+        
+        <xsl:variable name="input" select="md2doc:check-input('../test/in/test.md','utf-8')"/>
+        <xsl:variable name="tokens" select="md2doc:tokenize-input($input)"/>
+        <xsl:variable name="raw-xml" select="md2doc:build-lines($tokens)"/>        
+        <xsl:variable name="parsed-to-block" select="md2doc:do-block($raw-xml)"/>
+        <xsl:variable name="parsed-full" select="md2doc:do-inline($parsed-to-block)"/>
+        <xsl:variable name="out2" select="md2doc:convert($parsed-full)"/>
+        <xsl:variable name="out3" select="md2doc:build-HTML($out2)"/>
+        <xsl:copy-of select="$out2"/>
+<!--        <xsl:copy-of select="md2doc:build-HTML($out2)"/>-->
+<!--        <xsl:copy-of select="md2doc:do-block($raw-xml)"/>-->
+<!--        <xsl:apply-templates select="$out2"/>-->
+        <xsl:result-document href="../test/out/output-functions.xml" method="xml">
+            
+                <xsl:copy-of select="$out3"/>
+                  
+        </xsl:result-document>
+        
+    </xsl:template>
+      
     <xsl:function name="md2doc:alert">
         <xsl:param name="number" as="xs:integer"/>
         <xsl:param name="type" as="xs:string"/>
@@ -266,32 +440,6 @@
             </xsl:analyze-string>
         </xsl:for-each>
     </xsl:function>
-    
-    <xsl:output encoding="utf-8" method="xml" indent="yes"/>
-    <xsl:template name="main">
-<!--        <xsl:copy-of select="md2doc:prdik()"/>-->
-<!--        <xsl:copy-of select="md2doc:parse-to-block(md2doc:tokenize-input(md2doc:check-input('../../test.md','utf-8')))"/>-->
-<!--        <xsl:value-of select="if (matches('&lt;', '>')) then 'true' else 'false'"/>        -->
-        <xsl:variable name="input" select="md2doc:check-input('../test/in/test.md','utf-8')"/>
-<!--        <xsl:value-of select="$input" disable-output-escaping="yes"/>-->
-        <xsl:variable name="tokens" select="md2doc:tokenize-input($input)"/>
-        <!--<xsl:value-of select="$lines"/>-->
-<!--        <xsl:variable name="raw-block-xml" select="md2doc:parse-to-block($lines)"/>-->
-<!--        <xsl:copy-of select="$raw-block-xml"/>-->
-        <xsl:variable name="raw-xml" select="md2doc:build-lines($tokens)"/>
-        <xsl:variable name="out2" select="md2doc:do-block($raw-xml)"/>
-        <xsl:variable name="pom2" select="md2doc:parse-blockquotes($raw-xml)"/>
-        <xsl:variable name="pom1" select="md2doc:parse-headers($raw-xml)"/>
-        <xsl:variable name="out" select="md2doc:parse-lists($raw-xml)"/>
-        <xsl:copy-of select="md2doc:build-preHTML($out2)"/>
-<!--        <xsl:copy-of select="md2doc:do-block($raw-xml)"/>-->
-        <xsl:result-document href="../test/out/output-functions.xml" method="xml">
-            <pre-html>
-                <xsl:copy-of select="$out2"/>
-            </pre-html>
-        </xsl:result-document>
-        
-    </xsl:template>
     
     <xsl:variable name="regex">
         
