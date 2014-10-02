@@ -5,11 +5,9 @@ Conversion tool for transforming markdown formatted text files to valid DocBook 
 
 Mainly, it is developed for web application which will process input markdown and return docbook format. User can configurate output with given options and parameters.
 
+www.markdown2docbook.com
+
 Also, XSL stylesheet can be used in other applications.
-
-Website is [here][] (www.markdown2docbook.cz)
-
-[here]: http://www.markdown2docbook.cz
 
 Features
 --------
