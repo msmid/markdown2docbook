@@ -10,13 +10,11 @@ Also, XSL stylesheet can be used in other applications.
 Features
 --------
 
-* Web application
-** ### Practical use of xsl
-** Can process md input file
-** or it can process md from textarea
-** Output as a docbook file or preview textarea
-** Options like html output, structure of docbook etc.
-* XSL
-** ### Using stylesheet elsewhere
-** Multiple input files
-** Configurating docbook output (structure, tags etc.)
+### Web application ###
+* Can process md input file
+* or it can process md from textarea
+* Output as a docbook file or preview textarea
+* Options like html output, structure of docbook etc.
+### XSL ###
+* Multiple input files
+* Configurating docbook output (structure, tags etc.)
