@@ -46,13 +46,16 @@
     - otazka co s html v markdownu?
         - kdyby transformace delale nejdriv html a to do docbooku = problem solved-->
     
+    <!--  PHASE ONE FUNCTIONS  -->
+    
     <!--  FIRST STEP OF PHASE ONE
           Firstly, we need to parse block elements  -->
     <xsl:function name="md2doc:do-block">
         <xsl:param name="lines" as="xs:string*"/>
-        <!--EDIT: zde by mohl byt xsl:document-->
-        <xsl:sequence select="md2doc:parse-blockquotes($lines)"/>
-    </xsl:function>
+        <xsl:document>
+            <xsl:sequence select="md2doc:parse-blockquotes($lines)"/>
+        </xsl:document>
+    </xsl:function> 
     
     <xsl:function name="md2doc:parse-blockquotes">
         <xsl:param name="lines" as="xs:string*"/>
@@ -79,7 +82,6 @@
         </xsl:for-each>
     </xsl:function>
     
-<!--    TODO: ve fazi kde budu prehtml transformovat lze udelat ze z ul ul udelam ul li strukturu-->
     <xsl:function name="md2doc:parse-lists">
         <xsl:param name="lines" as="xs:string*"/>
         <xsl:for-each select="$lines">
@@ -208,7 +210,7 @@
                 <xsl:non-matching-substring>
                     <xsl:choose>
                         <xsl:when test="matches(.,'^\s+$')">
-                            <xsl:element name="blankline">
+                            <xsl:element name="lf">
                                 <xsl:value-of select="replace(., '\s+',  '')"/>
                             </xsl:element>
                         </xsl:when>
@@ -228,22 +230,41 @@
     
     <!--SECOND STEP OF PHASE ONE
     After block-level elements, we need to transform inline-level elements.-->  
+    
+    <!--musi nejdriv zacit s linkama a images pak s em/strong a nakonec s kodem-->
     <xsl:function name="md2doc:do-inline">
-        <xsl:param name="parsed-to-block" as="element()*"/>
-<!--        <xsl:sequence select="md2doc:parse-emphasis($parsed-to-block)"/>-->
-        <xsl:copy-of select="$parsed-to-block"/>
-        <!--TODO-->
+        <xsl:param name="parsed-to-block"/>
+        <xsl:apply-templates select="$parsed-to-block" mode="do-inline">
+            <xsl:with-param name="root" select="$parsed-to-block"/>
+        </xsl:apply-templates>
     </xsl:function>
     
-    <xsl:function name="md2doc:parse-emphasis">
-        <xsl:param name="parsed-to-block" as="element()*"/>
-        <!--<xsl:for-each select="$parsed-to-block">
-            <!-\-TODO-\->
-        </xsl:for-each>-->
+    <xsl:function name="md2doc:do-references">
+        <xsl:param name="parsed-to-block"/>
+        <xsl:param name="link-name"/>
+        <xsl:param name="link-id"/>
+        <xsl:for-each select="$parsed-to-block/p/text()[matches(.,'^ {0,3}\[(\d|\w)+\]: ?')]">
+            <xsl:analyze-string select="." 
+                regex="\[(1)\]: (www\.neco\.cz) .(title).">
+                <xsl:matching-substring>
+                    <xsl:if test="regex-group(1) eq $link-id">
+                        <xsl:value-of select="regex-group(2),regex-group(3)"/>
+                    </xsl:if>
+                </xsl:matching-substring>
+                <xsl:non-matching-substring>
+                    <xsl:value-of select="'reference nenalezena, '"/>
+                </xsl:non-matching-substring>
+            </xsl:analyze-string>
+        </xsl:for-each>
+        
     </xsl:function>
     
     <xsl:function name="md2doc:parse-links">
         <xsl:param name="parsed-to-block" as="element()*"/>
+        <xsl:copy-of select="$parsed-to-block"/>
+        <!--<xsl:for-each-group select="$parsed-to-block" group-by="text()">
+            <a><xsl:copy-of select="."/></a>
+        </xsl:for-each-group>-->
         <!--<xsl:for-each select="$parsed-to-block">
             <!-\-TODO
                 1. inline linky
@@ -253,12 +274,92 @@
         </xsl:for-each>-->
     </xsl:function>
     
-    <xsl:function name="md2doc:parse-code">
-        <xsl:param name="parsed-to-block" as="element()*"/>
-        <!--<xsl:for-each select="$parsed-to-block">
-            <!-\-TODO-\->
-        </xsl:for-each>-->
+    <xsl:function name="md2doc:parse-strong">
+        <xsl:param name="text" as="xs:string"/>
+        <xsl:analyze-string select="$text" regex="(\*{{2}}\w(\w|\s)*\w\*{{2}})|(_{{2}}\w(\w|\s)*\w_{{2}})">
+            <xsl:matching-substring>
+                <xsl:element name="strong">
+                    <xsl:copy-of select="replace(., '\*\*|__', '')"/>
+                </xsl:element>
+            </xsl:matching-substring>
+            <xsl:non-matching-substring>
+                <xsl:copy-of select="md2doc:parse-emphasis(.)"/>
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>
     </xsl:function>
+    
+    <xsl:function name="md2doc:parse-emphasis">
+        <xsl:param name="text" as="xs:string"/>
+        <xsl:analyze-string select="$text" regex="(\*{{1}}\w(\w|\s)*\w\*{{1}})|(_{{1}}\w(\w|\s)*\w_{{1}})">
+            <xsl:matching-substring>
+                <xsl:element name="em">
+                    <xsl:copy-of select="replace(., '\*|_', '')"/>
+                </xsl:element>
+            </xsl:matching-substring>
+            <xsl:non-matching-substring>
+                <xsl:copy-of select="md2doc:parse-code(.)"/>
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>
+    </xsl:function>
+    
+    <!--element code by mel jit i pres radek to znamena ze kdyz zacne na jednom radku pokracuje i na dalsi.
+    to vsak u me nelze protoze zakladni logika je ze se parsuje po radcich-->
+    <xsl:function name="md2doc:parse-code">
+        <xsl:param name="text" as="xs:string"/>
+        <xsl:analyze-string select="$text" regex="`\s*(\w|\s)+\s*`">
+            <xsl:matching-substring>
+                <xsl:element name="code">
+                    <xsl:copy-of select="normalize-space(replace(.,'`',''))"/>
+                </xsl:element>
+            </xsl:matching-substring>
+            <xsl:non-matching-substring>
+                <xsl:copy-of select="."/>
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>
+    </xsl:function>
+    
+    <xsl:function name="md2doc:do-inlinex">
+        <xsl:param name="parsed-to-block" as="element()*"/>
+<!--        <xsl:sequence select="md2doc:parse-emphasis($parsed-to-block)"/>-->
+        <xsl:sequence select="md2doc:parse-links($parsed-to-block)"/>
+<!--        <xsl:copy-of select="$parsed-to-block"/>-->
+        <!--TODO-->
+    </xsl:function>
+    
+    
+
+<!--    <xsl:function name="md2doc:build-links">
+        <xsl:param name="parsed-to-block" as="element()*"/>
+        <xsl:param name="link-id" as="xs:string"/>
+        <xsl:param name="link-name" as="xs:string"/>
+        <xsl:for-each select="$parsed-to-block">
+            <xsl:variable name="element" select="." as="element()"/>
+            <xsl:analyze-string select="." regex="\[(1)\]: (www.neco.cz) .(title).">
+                <xsl:matching-substring>
+                    <!-\-tady se bude čekovat id s link-id-\->
+                    <xsl:variable name="id" select="regex-group(1)"/>
+                    <xsl:variable name="url" select="regex-group(2)"/>
+                    <xsl:variable name="title" select="regex-group(3)"/>
+                    <xsl:element name="a">
+                        <xsl:attribute name="href"><xsl:value-of select="regex-group(2)"/></xsl:attribute>
+                        <xsl:attribute name="title"><xsl:value-of select="regex-group(3)"></xsl:value-of></xsl:attribute>
+                        <xsl:value-of select="$link-name"/>
+                    </xsl:element>
+                    <!-\-<xsl:message>
+                        <xsl:value-of select="."/> nalezeno!
+                        ID: <xsl:value-of select="regex-group(1)"/>
+                        URL: <xsl:value-of select="regex-group(2)"/>
+                        TITLE: <xsl:value-of select="regex-group(3)"/>
+                    </xsl:message>-\->
+                    <!-\-                    <xsl:copy-of select="$element"/>-\->
+                </xsl:matching-substring>
+                <xsl:non-matching-substring>
+<!-\-                    <xsl:copy-of select="$element"/>-\->
+                </xsl:non-matching-substring>
+            </xsl:analyze-string>
+        </xsl:for-each>
+    </xsl:function>-->
+   
     
     <xsl:function name="md2doc:parse-images">
         <xsl:param name="parsed-to-block" as="element()*"/>
@@ -267,129 +368,23 @@
         </xsl:for-each>-->
     </xsl:function>
     
-    <!--PHASE TWO
-    building formed xml document-->
+    <!--OTHER FUNCTIONS-->
     
-    <!--Function that convert processed lines into document-node type temporary tree, which is more suitable for
-    further transformation-->
-    <xsl:function name="md2doc:convert">
-        <xsl:param name="elements" as="element()*"/>
-        <xsl:document>
-        <xsl:copy-of select="$elements"/>
-        </xsl:document>    
+    <xsl:function name="md2doc:alert">
+        <xsl:param name="number" as="xs:integer"/>
+        <xsl:param name="type" as="xs:string"/>
+        <xsl:sequence select="$messages/message[@type=$type][@no=$number]/text()"/>
     </xsl:function>
     
-    <xsl:function name="md2doc:build-HTML">
-        <xsl:param name="parsed-to-block" as="document-node()"/>
-<!--        <xsl:element name="html">-->
-        <xsl:call-template name="md2doc:build-HTML">           
-            <xsl:with-param name="parsed-input" select="$parsed-to-block"/>
-        </xsl:call-template>
-<!--        </xsl:element>-->
-    </xsl:function>
     
-    <xsl:template name="md2doc:build-HTML">
-        <xsl:param name="parsed-input"/>
-        <html>
-            <head></head>
-            <body>
-                <xsl:apply-templates select="$parsed-input"/>
-            </body>
-        </html>
-    </xsl:template>
     
-    <xsl:template match="p">
-        <p><xsl:copy-of select="node()"/></p>
-    </xsl:template>
     
-    <xsl:template match="code">
-        <pre>
-            <xsl:copy-of select="."/>
-        </pre>
-    </xsl:template>
-    
-    <!--In xhtml blockquote can have only block level element as a child-->
-    <xsl:template match="blockquotex">
-        <blockquote>
-            <p>
-
-            </p>
-        </blockquote>
-    </xsl:template>
-    
-    <!--TRANSFORM LISTU-->
-    <!--EDIT 22/9 - 1607: NEJSPIS TOHLE LZE UDELAT EFEKTIVNEJI PRES FOR-EACH-GROUP-->
-    <!--We need to transform "lined" raw xml document into well-formed document e.g. merge and wrap block elements
-    around their content-->
-    <xsl:key name="kFollowing" match="li[preceding-sibling::*[1][self::li]]"
-        use="generate-id(preceding-sibling::li
-        [not(preceding-sibling::*[1][self::li])][1])"/>
-    
-    <xsl:template match="node()" name="identity">
-        <xsl:copy>
-            <xsl:apply-templates select="node()"/>
-        </xsl:copy>
-    </xsl:template>
-    
-    <xsl:template match="li[not(preceding-sibling::*[1][self::li])]">
-        <xsl:element name="{@type}">
-            <xsl:call-template name="identity"/>
-            <xsl:apply-templates mode="copy" select="key('kFollowing',generate-id())"/>
-        </xsl:element>
-    </xsl:template>
-    
-    <xsl:template match="li[preceding-sibling::*[1][self::li]]"/>
-    
-    <xsl:template match="li" mode="copy">
-        <xsl:call-template name="identity"/>
-    </xsl:template>
-    <!--END-->
-    
-    <!--TRANSFORM LISTU-->
-    <!--<xsl:key name="kFollowing" match="li[preceding-sibling::*[1][self::li]]"
-        use="generate-id(preceding-sibling::li
-        [not(preceding-sibling::*[1][self::li])][1])"/>
-    
-    <xsl:template match="node()" name="identity">
-        <xsl:copy>
-            <xsl:apply-templates select="node()"/>
-        </xsl:copy>
-    </xsl:template>
-    
-    <xsl:template match="li[not(preceding-sibling::*[1][self::li])]">
-        <xsl:element name="{@type}">
-            <xsl:call-template name="identity"/>
-            <xsl:apply-templates mode="copy" select="key('kFollowing',generate-id())"/>
-        </xsl:element>
-    </xsl:template>
-    
-    <xsl:template match="li[preceding-sibling::*[1][self::li]]"/>
-    
-    <xsl:template match="li" mode="copy">
-        <xsl:call-template name="identity"/>
-    </xsl:template>-->
-    <!--END-->
     
     <!-- testovací template (stejný jako na hlavním xsl)-->
     
     <xsl:output encoding="utf-8" method="xml" indent="yes"/>
     
-    <xsl:template name="main">
-<!--        <xsl:copy-of select="md2doc:prdik()"/>-->
-<!--        <xsl:copy-of select="md2doc:parse-to-block(md2doc:tokenize-input(md2doc:check-input('../../test.md','utf-8')))"/>-->
-<!--        <xsl:value-of select="if (matches('&lt;', '>')) then 'true' else 'false'"/>        -->
-        
-<!--        <xsl:value-of select="$input" disable-output-escaping="yes"/>-->
-        
-        <!--<xsl:value-of select="$lines"/>-->
-<!--        <xsl:variable name="raw-block-xml" select="md2doc:parse-to-block($lines)"/>-->
-<!--        <xsl:copy-of select="$raw-block-xml"/>-->
-<!--        <xsl:copy-of select="md2doc:build-lines($tokens)"/>-->
-        
-        <!--<xsl:variable name="pom2" select="md2doc:parse-blockquotes($raw-xml)"/>
-        <xsl:variable name="pom1" select="md2doc:parse-headers($raw-xml)"/>
-        <xsl:variable name="out" select="md2doc:parse-lists($raw-xml)"/>-->
-        <!--  Až potud se překlad skládá z dočasného xml, který v následujícím kroku je převeden na html   -->
+    <!--<xsl:template name="main">
         
         <xsl:variable name="input" select="md2doc:check-input('../test/in/test.md','utf-8')"/>
         <xsl:variable name="tokens" select="md2doc:tokenize-input($input)"/>
@@ -399,22 +394,30 @@
         <xsl:variable name="out2" select="md2doc:convert($parsed-full)"/>
         <xsl:variable name="out3" select="md2doc:build-HTML($out2)"/>
         <xsl:copy-of select="$out2"/>
-<!--        <xsl:copy-of select="md2doc:build-HTML($out2)"/>-->
-<!--        <xsl:copy-of select="md2doc:do-block($raw-xml)"/>-->
-<!--        <xsl:apply-templates select="$out2"/>-->
+
         <xsl:result-document href="../test/out/output-functions.xml" method="xml">
             
                 <xsl:copy-of select="$out3"/>
                   
         </xsl:result-document>
         
-    </xsl:template>
+    </xsl:template>-->
       
-    <xsl:function name="md2doc:alert">
-        <xsl:param name="number" as="xs:integer"/>
-        <xsl:param name="type" as="xs:string"/>
-        <xsl:sequence select="$messages/message[@type=$type][@no=$number]/text()"/>
-    </xsl:function>
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <!--OBSOLOLETE CODE-->
+    
+    
+    
     
     <xsl:function name="md2doc:prdik">
         <xsl:variable name="pom" as="element()*">
@@ -460,7 +463,7 @@
     <xsl:variable name="messages">
         <message type="error" no="1">Error with input file: incorrect encoding or missing file</message>
         <message type="error" no="2">Non matching: </message>
-        <message type="error" no="3">Error</message>
+        
     </xsl:variable>
     
     

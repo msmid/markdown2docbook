@@ -14,6 +14,7 @@
     <xsl:variable name="messages">
         <message type="error" no="1">Error with input file: incorrect encoding or missing file</message>
         <message type="error" no="2">Non matching: </message>
+        <message type="error" no="3">Error</message>
     </xsl:variable>    
     
 </xsl:stylesheet>
