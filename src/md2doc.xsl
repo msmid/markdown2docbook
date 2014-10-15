@@ -26,10 +26,12 @@
 
     <!--PHASE ONE-->
     <!--Step one; load input markdown document-->
-    <xsl:variable name="input" select="md2doc:load-input('../test/in/test.md','utf-8')"/>
- 
+    <xsl:variable name="input" select="md2doc:load-input('../test/in/test2.md','utf-8')"/>
+    <xsl:variable name="text-united" select="md2doc:unity-endline($input)"/>
+    <xsl:variable name="text-stripped" select="md2doc:strip-blanklines($text-united)"/>
     <!--Co musím udělat než začnu parsovat?
-    
+        
+        stripnout radky kde jsou jen spaces/tabs
         normalizovat line endings
         ošetřit HTML
         escapovany znaky
@@ -52,10 +54,23 @@
         
         <!--OUTPUT PHASE-->
         <xsl:result-document href="../test/out/output2.xml" format="docbook">&LF;
-
+            &LF;<xsl:text>HEADERS</xsl:text>&LF;
+            <xsl:copy-of select="md2doc:parse-headers($text-stripped)"/>
+            &LF;<xsl:text>RULERS</xsl:text>&LF;
+            <xsl:copy-of select="md2doc:parse-rulers($text-stripped)"/>
+            &LF;<xsl:text>CODEBLOCKS</xsl:text>&LF;
+            <xsl:copy-of select="md2doc:parse-codeblocks($text-stripped)"/>
+            &LF;<xsl:text>LISTS</xsl:text>&LF;
+            <xsl:copy-of select="md2doc:parse-lists($text-stripped)"/>
+            &LF;<xsl:text>BLOCKQUOTES</xsl:text>&LF;
+            <xsl:copy-of select="md2doc:parse-blockquotes($text-stripped)"/>
+            &LF;<xsl:text>PARAGRAPHS</xsl:text>&LF;
+            <xsl:copy-of select="md2doc:parse-paragraphs($text-stripped)"/>
         </xsl:result-document>
         <xsl:result-document href="../test/out/output3.xml" format="docbook">&LF;
-            <xsl:copy-of select="md2doc:parse-blockquote($input)"/>
+           
+            <xsl:copy-of select="md2doc:run-block($text-stripped)"/>
+            
         </xsl:result-document>
         <xsl:result-document href="../test/out/output.xml" format="docbook">&LF;
             
@@ -69,10 +84,30 @@
         
     </xsl:template>
     
- <!--MARKDOWN REGEX-->
- 
+<!--MARKDOWN REGEX-->
+
+<!-- nested brackets (?>[^\[\]]+|\[(??{ $g_nested_brackets })\])* -->
+
 <!-- codespan (`+)(.+?)(?<!`)\1(?!`) -->
 <!-- codeblock (?:\n\n|\A)((?:(?:[ ]{$g_tab_width} | \t).*\n+)+)((?=^[ ]{0,$g_tab_width}\S)|\Z) -->
 <!-- blockquotes (^[ \t]*>[ \t]?.+\n(.+\n)*\n*)+ -->
-
+<!-- strip link definitions ^[ ]{0,3}\[(.+)\]:[ \t]*\n?[ \t]*<?(\S+?)>?[ \t]*\n?[ \t]*(?:(?<=\s)["(](.+?)[")][ \t]*)?(?:\n+|\Z)
+                                                                                         (?<=\s) lookbehind není supportovaný    -->
+<!-- html tags 1 (^<($block_tags_a)\b(.*\n)*?</\2>[ \t]*(?=\n+|\Z)) -->
+<!-- html tegs liberally 2 (^<($block_tags_b)\b(.*\n)*?.*</\2>[ \t]*(?=\n+|\Z)) -->
+<!-- html special case <hr /> (?:(?<=\n\n)|\A\n?)([ ]{0,3}<(hr)\b([^<>])*?/?>[ \t]*(?=\n{2,}|\Z)) 
+                                 lookbehind, nefaká bez něj-->
+<!-- html special case comment (?:(?<=\n\n)|\A\n?)([ ]{0,3}(?s:<!(-\-.*?-\-\s*)+>)[ \t]*(?=\n{2,}|\Z)) 
+                                  lookbehind, nefaká bez něj-->
+<!-- horizontal rule * ^[ ]{0,2}([ ]?\*[ ]?){3,}[ \t]*$ -->
+<!-- horizontal rule - ^[ ]{0,2}([ ]?-[ ]?){3,}[ \t]*$ -->
+<!-- horizontal rule _ ^[ ]{0,2}([ ]?_[ ]?){3,}[ \t]*$ -->
+<!-- a reference-style (\[($g_nested_brackets)\][ ]?(?:\n[ ]*)?\[(.*?)\]) -->
+<!-- a inline-style (\[($g_nested_brackets)\]\([ \t]*<?(.*?)>?[ \t]*((['"])(.*?)\5)?\)) -->
+<!-- images reference-style (!\[(.*?)\][ ]?(?:\n[ ]*)?\[(.*?)\]) -->
+<!-- image inline-style (!\[(.*?)\]\([ \t]*<?(\S+?)>?[ \t]*((['"])(.*?)\5[ \t]*)?\)) -->
+<!-- whole list (([ ]{0,3}((?:[*+-]|\d+[.]))[ \t]+)(?s:.+?)(\z|\n{2,}(?=\S)(?![ \t]*(?:[*+-]|\d+[.])[ \t]+))) -->
+<!-- header1 setext ^(.+)[ \t]*\n=+[ \t]*\n+ -->
+<!-- header2 setext ^(.+)[ \t]*\n-+[ \t]*\n+ -->
+<!-- header atx ^(\#{1,6})[ \t]*(.+?)[ \t]*\#*\n+ -->
 </xsl:transform>
