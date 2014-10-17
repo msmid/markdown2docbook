@@ -54,7 +54,7 @@
         
         <!--OUTPUT PHASE-->
         <xsl:result-document href="../test/out/output2.xml" format="docbook">&LF;
-            &LF;<xsl:text>HEADERS</xsl:text>&LF;
+            <!--&LF;<xsl:text>HEADERS</xsl:text>&LF;
             <xsl:copy-of select="md2doc:parse-headers($text-stripped)"/>
             &LF;<xsl:text>RULERS</xsl:text>&LF;
             <xsl:copy-of select="md2doc:parse-rulers($text-stripped)"/>
@@ -65,7 +65,7 @@
             &LF;<xsl:text>BLOCKQUOTES</xsl:text>&LF;
             <xsl:copy-of select="md2doc:parse-blockquotes($text-stripped)"/>
             &LF;<xsl:text>PARAGRAPHS</xsl:text>&LF;
-            <xsl:copy-of select="md2doc:parse-paragraphs($text-stripped)"/>
+            <xsl:copy-of select="md2doc:parse-paragraphs($text-stripped)"/>-->
         </xsl:result-document>
         <xsl:result-document href="../test/out/output3.xml" format="docbook">&LF;
            

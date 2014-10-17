@@ -18,7 +18,7 @@
         <xsl:param name="encoding" as="xs:string"/>
         <xsl:choose>
             <xsl:when test="unparsed-text-available($uri, $encoding)">
-                <xsl:value-of select="unparsed-text($uri, $encoding)"/>
+                <xsl:value-of select="concat(unparsed-text($uri, $encoding),'&#xA;&#xA;')"/>
             </xsl:when>
             <xsl:otherwise>
                 <xsl:message>
@@ -53,7 +53,7 @@
     <xsl:function name="md2doc:run-block">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:variable name="result" select="md2doc:parse-headers(concat($text,'&#xA;&#xA;'))"/>
+        <xsl:variable name="result" select="md2doc:parse-headers($text)"/>
         <!--<xsl:variable name="bqList" select="md2doc:parse-lists($bq)"/>-->
         <xsl:copy-of select="$result"/>
     </xsl:function>
@@ -89,6 +89,37 @@
         </xsl:analyze-string>
     </xsl:function>
     
+    <xsl:function name="md2doc:parse-header">
+        <xsl:param name="input" as="xs:string*"/>
+        <xsl:variable name="text" select="string-join($input,'')"/>
+        <!--setext style-->
+        <xsl:analyze-string select="$text" regex="(^(.+)[ \t]*\n(=+)[ \t]*\n+)|(^(.+)[ \t]*\n(-+)[ \t]*\n+)" flags="m">
+            <xsl:matching-substring>
+                <xsl:choose>
+                    <xsl:when test="matches(.,'=')">
+                        <h1><xsl:copy-of select="replace(replace(.,'=',''), '\n','')"/></h1>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <h2><xsl:copy-of select="replace(replace(.,'-',''), '\n','')"/></h2>
+                    </xsl:otherwise>
+                </xsl:choose>         
+            </xsl:matching-substring>
+            <xsl:non-matching-substring>
+                <!--atx style-->
+                <xsl:analyze-string select="." regex="^(#{{1,6}})[ \t]*(.+?)[ \t]*#*\n+" flags="m">
+                    <xsl:matching-substring>
+                        <xsl:element name="h{string-length(regex-group(1))}">
+                            <xsl:copy-of select="regex-group(2)"/>
+                        </xsl:element>
+                    </xsl:matching-substring>
+                    <xsl:non-matching-substring>
+                        <xsl:copy-of select="."/>
+                    </xsl:non-matching-substring>
+                </xsl:analyze-string>         
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>
+    </xsl:function>    
+    
     <xsl:function name="md2doc:parse-rulers">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
@@ -123,14 +154,57 @@
     <xsl:function name="md2doc:parse-lists">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:analyze-string select="$text" regex="((^[ ]{{0,3}}([*+-]|\d+[.])[ \t]+)(.+\n)*\n*( .+\n*)*)+" flags="m">
+        <xsl:analyze-string select="$text" regex="((^([ ]{{0,3}})([*+-]|\d+[.])[ \t]+)(.+\n)*\n*( .+\n*)*)+" flags="m">
             <xsl:matching-substring>
-                <list><xsl:copy-of select="."/></list>
+                <xsl:element name="{if (matches(regex-group(4),'[*+-]')) then 'ul' else 'ol'}">
+                    <xsl:copy-of select="md2doc:parse-list-items(., string-length(regex-group(3)))"/>
+                </xsl:element>
+                <!--debug-->
+                <!--<obsahListu>&LF;<xsl:copy-of select="."/></obsahListu>
+                <indent><xsl:copy-of select="string-length(regex-group(3))"/></indent>-->               
+                <!--OLD: <list><xsl:copy-of select="md2doc:parse-list-items(replace(.,'\n+$',''))"/></list>-->             
             </xsl:matching-substring>
             <xsl:non-matching-substring>
                 <xsl:copy-of select="md2doc:parse-blockquotes(.)"/>
             </xsl:non-matching-substring>
         </xsl:analyze-string>
+    </xsl:function>
+    
+    <xsl:function name="md2doc:parse-list-items">
+        <xsl:param name="input" as="xs:string*"/>
+        <xsl:param name="indent" as="xs:integer"/>
+        <xsl:variable name="text" select="string-join($input,'')"/>
+        <xsl:analyze-string select="$text" regex="^\n?( {{{$indent}}})[*+-] (.+\n?)$" flags="m">
+            <xsl:matching-substring>
+                <!--<li><xsl:copy-of select="md2doc:parse-header('# header&#xA;')"/></li>-->
+                <li><xsl:copy-of select="md2doc:parse-header(regex-group(2))"/></li>
+                <!--<xsl:message>
+                    <xsl:value-of select="normalize-space(regex-group(2))"/>
+                </xsl:message>-->
+            </xsl:matching-substring>
+            <xsl:non-matching-substring>
+                <!--items that aren't intended same as first item, are considered as inner lists.
+                    All we need is to trim their leading spaces based on intend of first item-->
+                <xsl:choose>
+                    <xsl:when test="$indent != 0">
+                        <xsl:variable name="trim" select="concat('^ {', $indent, '}')" as="xs:string"/>
+                        <xsl:copy-of select="md2doc:parse-lists(replace(., $trim,'','m'))"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <!--tady spis run block EDIT: tady je to spis dead-end-->
+                        <xsl:copy-of select="md2doc:parse-header(.)"/>
+                        <!--<xsl:message>
+                            <xsl:value-of select="."/>
+                        </xsl:message>-->
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>
+<!--        <xsl:copy-of select="$text"/>-->
+<!--        <obsah><xsl:copy-of select="$text"/></obsah>-->
+        <!--<xsl:message>
+            <xsl:value-of select="$text"/>
+        </xsl:message>-->
     </xsl:function>
     
     <xsl:function name="md2doc:parse-blockquotes">
