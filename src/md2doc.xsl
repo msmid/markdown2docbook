@@ -27,7 +27,7 @@
     <!--PHASE ONE-->
     <!--Step one; load input markdown document-->
     <xsl:variable name="input" select="md2doc:load-input('../test/in/test2.md','utf-8')"/>
-    <xsl:variable name="text-united" select="md2doc:unity-endline($input)"/>
+    <xsl:variable name="text-united" select="md2doc:unite-endlines($input)"/>
     <xsl:variable name="text-stripped" select="md2doc:strip-blanklines($text-united)"/>
     <!--Co musím udělat než začnu parsovat?
         
@@ -53,7 +53,17 @@
     <xsl:template name="main">
         
         <!--OUTPUT PHASE-->
-        <xsl:result-document href="../test/out/output2.xml" format="docbook">&LF;
+        <xsl:result-document href="../test/out/output3.xml" format="docbook">&LF;
+<!--            <xsl:copy-of select="md2doc:system-info()"/>-->
+            
+<!--            <xsl:copy-of select="md2doc:run-block($text-stripped)"/>-->
+            
+            <xsl:if test="matches('prvni radek
+                
+                druhy radek
+                
+                treti radek','prvni', 'm')">ano</xsl:if>
+
             <!--&LF;<xsl:text>HEADERS</xsl:text>&LF;
             <xsl:copy-of select="md2doc:parse-headers($text-stripped)"/>
             &LF;<xsl:text>RULERS</xsl:text>&LF;
@@ -67,12 +77,16 @@
             &LF;<xsl:text>PARAGRAPHS</xsl:text>&LF;
             <xsl:copy-of select="md2doc:parse-paragraphs($text-stripped)"/>-->
         </xsl:result-document>
-        <xsl:result-document href="../test/out/output3.xml" format="docbook">&LF;
+        <xsl:result-document href="../test/out/output2.xml" format="docbook">&LF;
            
             <xsl:copy-of select="md2doc:run-block($text-stripped)"/>
             
         </xsl:result-document>
         <xsl:result-document href="../test/out/output.xml" format="docbook">&LF;
+            <xsl:variable name="input" select="md2doc:load-input('../test/in/test-frag.md','utf-8')"/>
+            <xsl:variable name="text-united" select="md2doc:unite-endlines($input)"/>
+            <xsl:variable name="text-stripped" select="md2doc:strip-blanklines($text-united)"/>
+            <xsl:copy-of select="md2doc:run-block($text-stripped)"/>
             
             <xsl:fallback>
                 <xsl:message>
@@ -107,6 +121,7 @@
 <!-- images reference-style (!\[(.*?)\][ ]?(?:\n[ ]*)?\[(.*?)\]) -->
 <!-- image inline-style (!\[(.*?)\]\([ \t]*<?(\S+?)>?[ \t]*((['"])(.*?)\5[ \t]*)?\)) -->
 <!-- whole list (([ ]{0,3}((?:[*+-]|\d+[.]))[ \t]+)(?s:.+?)(\z|\n{2,}(?=\S)(?![ \t]*(?:[*+-]|\d+[.])[ \t]+))) -->
+<!-- list item (\n)?(^[ \t]*)($marker_any) [ \t]+((?s:.+?)(\n{1,2}))(?= \n* (\z | \2 ($marker_any) [ \t]+)) -->
 <!-- header1 setext ^(.+)[ \t]*\n=+[ \t]*\n+ -->
 <!-- header2 setext ^(.+)[ \t]*\n-+[ \t]*\n+ -->
 <!-- header atx ^(\#{1,6})[ \t]*(.+?)[ \t]*\#*\n+ -->
