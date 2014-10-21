@@ -57,13 +57,37 @@
 <!--            <xsl:copy-of select="md2doc:system-info()"/>-->
             
 <!--            <xsl:copy-of select="md2doc:run-block($text-stripped)"/>-->
-            
-            <xsl:if test="matches('prvni radek
-                
-                druhy radek
-                
-                treti radek','prvni', 'm')">ano</xsl:if>
+            <xsl:variable name="i">
+<xsl:text>
 
+
+
+    * list1
+  * nested1
+  * nested2
+* list2
+  - nested3
+  + nested4
+
+  text
+
+  > bq
+
+
+1. list3
+* list4
+
+text
+
+
+
+</xsl:text>
+            </xsl:variable>
+            <xsl:variable name="test" select="tokenize($i,'\n([*+-]|\d+\.)', 'm!')"/>
+            <xsl:for-each select="$test">
+                <token><xsl:copy-of select="."/></token>
+            </xsl:for-each>
+            <trim><xsl:copy-of select="replace(replace($i,'^\n+',''),'\n+$','')"/></trim>
             <!--&LF;<xsl:text>HEADERS</xsl:text>&LF;
             <xsl:copy-of select="md2doc:parse-headers($text-stripped)"/>
             &LF;<xsl:text>RULERS</xsl:text>&LF;
