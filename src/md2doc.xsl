@@ -58,36 +58,24 @@
             
 <!--            <xsl:copy-of select="md2doc:run-block($text-stripped)"/>-->
             <xsl:variable name="i">
-<xsl:text>
+ahoj nashle 
 
+dobardan
 
-
-    * list1
-  * nested1
-  * nested2
-* list2
-  - nested3
-  + nested4
-
-  text
-
-  > bq
-
-
-1. list3
-* list4
-
-text
-
-
-
-</xsl:text>
-            </xsl:variable>
+aadobardanaa</xsl:variable>
             <xsl:variable name="test" select="tokenize($i,'\n([*+-]|\d+\.)', 'm!')"/>
             <xsl:for-each select="$test">
                 <token><xsl:copy-of select="."/></token>
             </xsl:for-each>
             <trim><xsl:copy-of select="replace(replace($i,'^\n+',''),'\n+$','')"/></trim>
+            <xsl:analyze-string select="$i" regex="(?!\n\n)dobardan(?=\n\n)" flags="m!">
+                <xsl:matching-substring>
+                    <ano><xsl:value-of select="."/></ano>
+                </xsl:matching-substring>
+                <xsl:non-matching-substring>
+                    <non><xsl:value-of select="."/></non>
+                </xsl:non-matching-substring>
+            </xsl:analyze-string>
             <!--&LF;<xsl:text>HEADERS</xsl:text>&LF;
             <xsl:copy-of select="md2doc:parse-headers($text-stripped)"/>
             &LF;<xsl:text>RULERS</xsl:text>&LF;
@@ -132,7 +120,7 @@ text
 <!-- strip link definitions ^[ ]{0,3}\[(.+)\]:[ \t]*\n?[ \t]*<?(\S+?)>?[ \t]*\n?[ \t]*(?:(?<=\s)["(](.+?)[")][ \t]*)?(?:\n+|\Z)
                                                                                          (?<=\s) lookbehind není supportovaný    -->
 <!-- html tags 1 (^<($block_tags_a)\b(.*\n)*?</\2>[ \t]*(?=\n+|\Z)) -->
-<!-- html tegs liberally 2 (^<($block_tags_b)\b(.*\n)*?.*</\2>[ \t]*(?=\n+|\Z)) -->
+<!-- html tegs 2 (^<($block_tags_b)\b(.*\n)*?.*</\2>[ \t]*(?=\n+|\Z)) -->
 <!-- html special case <hr /> (?:(?<=\n\n)|\A\n?)([ ]{0,3}<(hr)\b([^<>])*?/?>[ \t]*(?=\n{2,}|\Z)) 
                                  lookbehind, nefaká bez něj-->
 <!-- html special case comment (?:(?<=\n\n)|\A\n?)([ ]{0,3}(?s:<!(-\-.*?-\-\s*)+>)[ \t]*(?=\n{2,}|\Z)) 
