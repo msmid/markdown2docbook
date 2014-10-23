@@ -49,6 +49,36 @@
         </xsl:analyze-string>
     </xsl:function>
     
+    <xsl:function name="md2doc:strip-references">
+        <xsl:param name="input" as="xs:string*"/>
+        <xsl:variable name="text" select="string-join($input,'')"/>
+        <xsl:analyze-string select="$text" 
+            regex="^[ ]{{0,3}}\[(.+)\]:[ \t]*\n?[ \t]*&lt;?(\S+?)&gt;?[ \t]*\n?[ \t]*(?:(?&lt;=\s)[&quot;(](.+?)[&quot;)][ \t]*)?(?:\n+|\Z)" flags="m!">
+            <xsl:matching-substring/>
+            <xsl:non-matching-substring>
+                <xsl:value-of select="."/>
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>
+    </xsl:function>
+    
+    <xsl:function name="md2doc:save-references">
+        <xsl:param name="input" as="xs:string*"/>
+        <xsl:variable name="text" select="string-join($input,'')"/>
+        <references>
+            <xsl:analyze-string select="$text" 
+                regex="^[ ]{{0,3}}\[(.+)\]:[ \t]*\n?[ \t]*&lt;?(\S+?)&gt;?[ \t]*\n?[ \t]*(?:(?&lt;=\s)[&quot;(](.+?)[&quot;)][ \t]*)?(?:\n+|\Z)" flags="m!">
+                <xsl:matching-substring>
+                    <xsl:element name="reference">
+                        <xsl:attribute name="id" select="lower-case(regex-group(1))"/>
+                        <xsl:attribute name="url" select="regex-group(2)"/>
+                        <xsl:attribute name="title" select="regex-group(3)"/>
+                    </xsl:element>
+                </xsl:matching-substring>
+                <xsl:non-matching-substring/>
+            </xsl:analyze-string>
+        </references>
+    </xsl:function>
+    
     <!--PARSING FUNCTIONS-->
     
     <xsl:function name="md2doc:run-block">
@@ -130,12 +160,27 @@
     <xsl:function name="md2doc:parse-rulers">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:analyze-string select="$text" regex="^[ ]{{0,2}}([ ]?(\*|-|_)[ ]?){{3,}}[ \t]*$" flags="m">
+        <!--First rulers marked with *, then - and last _ -->
+        <xsl:analyze-string select="$text" regex="^[ ]{{0,2}}([ ]?(\*)[ ]?){{3,}}[ \t]*$" flags="m">
             <xsl:matching-substring>
                 <hr />
             </xsl:matching-substring>
             <xsl:non-matching-substring>
-                <xsl:copy-of select="md2doc:parse-lists(.)"/>
+                <xsl:analyze-string select="." regex="^[ ]{{0,2}}([ ]?(-)[ ]?){{3,}}[ \t]*$" flags="m">
+                    <xsl:matching-substring>
+                        <hr />
+                    </xsl:matching-substring>
+                    <xsl:non-matching-substring>
+                        <xsl:analyze-string select="." regex="^[ ]{{0,2}}([ ]?(_)[ ]?){{3,}}[ \t]*$" flags="m">
+                            <xsl:matching-substring>
+                                <hr />
+                            </xsl:matching-substring>
+                            <xsl:non-matching-substring>
+                                <xsl:copy-of select="md2doc:parse-lists(.)"/>
+                            </xsl:non-matching-substring>
+                        </xsl:analyze-string>
+                    </xsl:non-matching-substring>
+                </xsl:analyze-string>
             </xsl:non-matching-substring>
         </xsl:analyze-string>
     </xsl:function>
@@ -265,7 +310,7 @@
     <xsl:function name="md2doc:parse-paragraphs">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:variable name="split" select="tokenize(replace(replace($text,'^\n',''),'\n+$',''),'\n{2,}')"/>
+        
         <!--<xsl:choose>
             <xsl:when test="matches($text,'(\n{2,})','m')">
                 <xsl:for-each select="$split">
@@ -278,53 +323,137 @@
 <!-\-                <xsl:copy-of select="replace(replace($text,'^\n',''),'\n+$','')"/>-\->
             </xsl:otherwise>
         </xsl:choose>-->
+        <xsl:variable name="refs" select="md2doc:save-references($text)"/>
+        <xsl:variable name="strip" select="md2doc:strip-references($text)"/>
+        <xsl:variable name="split" select="tokenize(replace(replace($strip,'^\n',''),'\n+$',''),'\n{2,}')"/>
         <xsl:for-each select="$split">
-            <p><xsl:copy-of select="replace(replace(.,'^ +',''),' +$','')"/></p>
+            <p><xsl:copy-of select="md2doc:run-inline(replace(replace(.,'^ +',''),' +$',''), $refs)"/></p>
         </xsl:for-each>
 <!--        <paraObsah><xsl:copy-of select="$text"/></paraObsah>-->
     </xsl:function>
     
-    <xsl:function name="md2doc:parse-inline">
+    <xsl:function name="md2doc:run-inline">
         <xsl:param name="input" as="xs:string*"/>
+        <xsl:param name="refs"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:copy-of select="md2doc:parse-codespans($text)"/>
+        <xsl:copy-of select="md2doc:parse-codespans($text, $refs)"/>
+<!--        <xsl:copy-of select="md2doc:parse-images($text, $refs)"/>-->
     </xsl:function>
     
     <xsl:function name="md2doc:parse-codespans">
         <xsl:param name="input" as="xs:string*"/>
+        <xsl:param name="refs"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:analyze-string select="$text" regex="regex">
+        <xsl:analyze-string select="$text" regex="(`+)(.+?)(?&lt;!`)\1(?!`)" flags="m!">
             <xsl:matching-substring>
-                
+                <code><xsl:copy-of select="normalize-space(regex-group(2))"/></code>
             </xsl:matching-substring>
             <xsl:non-matching-substring>
-                
+                <xsl:copy-of select="md2doc:parse-images($text, $refs)"/>
             </xsl:non-matching-substring>
         </xsl:analyze-string>
     </xsl:function>
     
     <xsl:function name="md2doc:parse-images">
         <xsl:param name="input" as="xs:string*"/>
+        <xsl:param name="refs"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:analyze-string select="$text" regex="regex">
+        <!--Inline style images-->
+        <xsl:analyze-string select="$text" 
+            regex="(!\[(.*?)\]\([ \t]*&lt;?(\S+?)&gt;?[ \t]*(([&apos;&quot;])(.*?)\5[ \t]*)?\))" flags="">
             <xsl:matching-substring>
-                
+                <xsl:element name="img">
+                    <xsl:attribute name="src" select="regex-group(3)"/>
+                    <xsl:attribute name="alt" select="regex-group(2)"/>
+                    <xsl:attribute name="title" select="regex-group(6)"/>
+                </xsl:element>
             </xsl:matching-substring>
             <xsl:non-matching-substring>
-                
+                <!--Reference style-->
+                <xsl:analyze-string select="." regex="(!\[(.*?)\][ ]?(?:\n[ ]*)?\[(.*?)\])" flags="!">
+                    <xsl:matching-substring>
+                        <xsl:variable name="id" select="lower-case(regex-group(3))"/>
+                        <xsl:choose>
+                            <xsl:when test="$refs/reference[@id = $id]">
+                                <xsl:element name="img">
+                                    <xsl:attribute name="src" select="$refs/reference[@id = $id]/@url"/>
+                                    <xsl:attribute name="alt" select="regex-group(2)"/>
+                                    <xsl:attribute name="title" select="$refs/reference[@id = $id]/@title"/>
+                                </xsl:element>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of select="."/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:matching-substring>
+                    <xsl:non-matching-substring>
+                        <xsl:copy-of select="md2doc:parse-anchors(., $refs)"/>
+                    </xsl:non-matching-substring>
+                </xsl:analyze-string>
             </xsl:non-matching-substring>
         </xsl:analyze-string>
+<!--        <xsl:copy-of select="$refs"/>-->
     </xsl:function>
     
     <xsl:function name="md2doc:parse-anchors">
         <xsl:param name="input" as="xs:string*"/>
+        <xsl:param name="refs"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:analyze-string select="$text" regex="regex">
+        <!--Inline style first-->
+        <xsl:analyze-string select="$text" 
+            regex="(\[(.*?)\]\([ \t]*&lt;?(.*?)&gt;?[ \t]*(([&apos;&quot;])(.*?)\5)?\))" flags="!">
             <xsl:matching-substring>
-                
+                <xsl:element name="a">
+                    <xsl:attribute name="href" select="regex-group(3)"/>
+                    <xsl:attribute name="title" select="regex-group(6)"/>
+                    <xsl:copy-of select="md2doc:parse-strong(regex-group(2))"/>
+                </xsl:element>
             </xsl:matching-substring>
             <xsl:non-matching-substring>
-                
+                <!--Reference style-->
+                <xsl:analyze-string select="." regex="(\[(.*?)\][ ]?(?:\n[ ]*)?\[(.*?)\])" flags="!">
+                    <xsl:matching-substring>
+                        <xsl:variable name="id" select="lower-case(regex-group(3))"/>
+                        <xsl:choose>
+                            <xsl:when test="$refs/reference[@id = $id]">
+                                <xsl:element name="a">
+                                    <xsl:attribute name="href" select="$refs/reference[@id = $id]/@url"/>
+                                    <xsl:attribute name="title" select="$refs/reference[@id = $id]/@title"/>
+                                    <xsl:copy-of select="md2doc:parse-strong(regex-group(2))"/>
+                                </xsl:element>                    
+                            </xsl:when>
+                            <xsl:when test="$refs/reference[@id = lower-case(regex-group(2))]">
+                                <xsl:element name="a">
+                                    <xsl:attribute name="href" select="$refs/reference[@id = lower-case(regex-group(2))]/@url"/>
+                                    <xsl:attribute name="title" select="$refs/reference[@id = lower-case(regex-group(2))]/@title"/>
+                                    <xsl:copy-of select="md2doc:parse-strong(regex-group(2))"/>
+                                </xsl:element> 
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:copy-of select="."/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:matching-substring>
+                    <xsl:non-matching-substring>
+                        <xsl:copy-of select="md2doc:parse-automatic-links(.)"/>
+                    </xsl:non-matching-substring>
+                </xsl:analyze-string>
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>
+    </xsl:function>
+    
+    <xsl:function name="md2doc:parse-automatic-links">
+        <xsl:param name="input" as="xs:string*"/>
+        <xsl:variable name="text" select="string-join($input,'')"/>
+        <xsl:analyze-string select="$text" regex="&lt;((https?|ftp):[^&apos;&quot;&gt;\s]+)&gt;">
+            <xsl:matching-substring>
+                <xsl:element name="a">
+                    <xsl:attribute name="href" select="regex-group(1)"/>
+                    <xsl:copy-of select="regex-group(1)"/>
+                </xsl:element>
+            </xsl:matching-substring>
+            <xsl:non-matching-substring>
+                <xsl:copy-of select="md2doc:parse-strong(.)"/>
             </xsl:non-matching-substring>
         </xsl:analyze-string>
     </xsl:function>
@@ -332,12 +461,12 @@
     <xsl:function name="md2doc:parse-strong">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:analyze-string select="$text" regex="regex">
+        <xsl:analyze-string select="$text" regex="(\*\*|__)(?=\S)(.+?[*_]*)(?&lt;=\S)\1" flags="!">
             <xsl:matching-substring>
-                
+                <strong><xsl:value-of select="regex-group(2)"/></strong>
             </xsl:matching-substring>
             <xsl:non-matching-substring>
-                
+                <xsl:copy-of select="md2doc:parse-emphasis(.)"/>
             </xsl:non-matching-substring>
         </xsl:analyze-string>
     </xsl:function>
@@ -345,12 +474,12 @@
     <xsl:function name="md2doc:parse-emphasis">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:analyze-string select="$text" regex="regex">
+        <xsl:analyze-string select="$text" regex="(\*|_)(?=\S)(.+?)(?&lt;=\S)\1" flags="!">
             <xsl:matching-substring>
-                
+                <em><xsl:value-of select="regex-group(2)"/></em>
             </xsl:matching-substring>
             <xsl:non-matching-substring>
-                
+                <xsl:value-of select="."/>
             </xsl:non-matching-substring>
         </xsl:analyze-string>
     </xsl:function>
