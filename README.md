@@ -5,7 +5,7 @@ Conversion tool for transforming markdown formatted text files to valid DocBook 
 
 Mainly, it is developed for web application which will process input markdown and return docbook format. User can configurate output with given options and parameters.
 
-XSL is optimized for Saxon HE processor, which is free and offers functionality, that is needed.
+XSL is optimized for Saxon HE processor
  
  * better regex support than native XPath specification (using "!" for java regex)
  * compiling processor with binding parameters
