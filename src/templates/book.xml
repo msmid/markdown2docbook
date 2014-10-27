@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://docbook.org/xml/5.0/rng/docbook.rng" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="http://docbook.org/xml/5.0/rng/docbook.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron"?>
+<book xmlns="http://docbook.org/ns/docbook"
+    xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0">
+    <info>
+        <title>Book Template Title</title>
+        <author>
+            <orgname>Organization Name</orgname>
+            <address>
+                <city>City</city>
+                <street>Street</street>
+                <postcode>000000</postcode>
+                <country>Country</country>
+            </address>
+            <email>user@example.com</email>
+        </author>
+    </info>
+    
+    <!--<part>
+        <title>First Part</title>
+        <subtitle>Subtitle of First Part</subtitle>
+        <chapter>
+            <title>Chapter Title</title>
+            <subtitle>Subtitle of Chapter</subtitle>
+            <sect1>
+                <title>Section1 Title</title>
+                <subtitle>Subtitle of Section 1</subtitle>
+                <para>Text</para>
+            </sect1>
+        </chapter>
+    </part>-->
+</book>
