@@ -19,11 +19,6 @@ Features
 --------
 
 ### Web application ###
-* Can process md input file
-* or it can process md from textarea
-* Output as a docbook file or preview textarea
-* Options like html output, structure of docbook etc.
+* Easy to use online converter tool
 
-### XSL ###
-* Multiple input files
-* Configurating docbook output (structure, tags etc.)
+### XSL stylesheet ###
