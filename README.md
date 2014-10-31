@@ -39,4 +39,5 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
         * get-html($input) - Same as main($input) function but this returns only HTML nodes
         
    2. ### Running stylesheet over DocBook XML document ###
+   
    3. ### Using stylesheet to convert markdown documents ###
