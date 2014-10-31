@@ -35,8 +35,8 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
 
      Now you can use md2doc functions:
      
-        * main($input) - Transforms markdown string input into DocBook nodes
-        * get-html($input) - Same as main($input) function but this returns only HTML nodes
+     * main($input) - Transforms markdown string input into DocBook nodes
+     * get-html($input) - Same as main($input) function but this returns only HTML nodes
         
    2. ### Running stylesheet over DocBook XML document ###
    
