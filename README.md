@@ -1,4 +1,4 @@
-Markdown2DocBook MD2Doc
+Markdown to DocBook - MD2Doc
 =======================
 
 Conversion tool for transforming markdown formatted text files to valid DocBook documents. Project is based on XSLT 2.0 technology.
@@ -36,7 +36,7 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
   Now you can use following md2doc functions:
      
   * **convert(xs:string $input, xs:string $root-tag)**
-    Transforms markdown string input into DocBook. Ideally used inside template that can match markdown text. Root tag           defines structure based on headlines. For example, if `$root-tag = 'chapter'` all h1 headline are taken as chapter.
+    Transforms markdown string input into DocBook. Ideally used inside template that can match markdown text. Root tag           defines structure based on headlines. For example, if `$root-tag = 'chapter'`. all h1 headlines are taken as chapter.
 
   * **get-html(xs:string $input)**
     Same as main($input) function but this returns only HTML nodes as they are.
