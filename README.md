@@ -28,15 +28,18 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
 ### 1. Including md2doc stylesheet in another stylesheet ###
       
   Let's say you have your own xsl stylesheet and you want to use certain md2doc functions.
-  There is nothing easier. Use `<xsl:include>` element. Don't forget about namespace! Be sure to add md2doc URI                `http://www.markdown2docbook.com/ns/markdown2docbook` between other namespace declarations. Example:
+  There is nothing easier. Use `<xsl:include>` element. Don't forget about namespace! Be sure to add md2doc URI                `http://www.markdown2docbook.com/ns/markdown2docbook` among other namespace declarations. Example:
 
     <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xmlns:md2doc="http://www.markdown2docbook.com/ns/md2doc"> ...
 
   Now you can use md2doc functions:
      
-  * main($input) - Transforms markdown string input into DocBook nodes
-  * get-html($input) - Same as main($input) function but this returns only HTML nodes
+  * main(xs:string $input)
+    Transforms markdown string input into DocBook
+
+  * get-html(xs:string $input)
+    Same as main($input) function but this returns only HTML nodes
         
 ### 2. Running stylesheet over DocBook XML document ###
    
