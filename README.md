@@ -1,11 +1,11 @@
-markdown2docbook
-================
+Markdown2DocBook MD2Doc
+=======================
 
 Conversion tool for transforming markdown formatted text files to valid DocBook documents. Project is based on XSLT 2.0 technology.
 
 XSL is developed under Saxon XSLT processor. See below why
  
-   * better regex support than native XPath specification (using flag `!` for java regex)
+   * Better regex support than native XPath specification (using flag `!` for java regex)
    * PHP API (Saxon/C)
    * Great performance
 
@@ -33,14 +33,21 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
     <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xmlns:md2doc="http://www.markdown2docbook.com/ns/md2doc"> ...
 
-  Now you can use md2doc functions:
+  Now you can use following md2doc functions:
      
-  * **main(xs:string $input)**
-    Transforms markdown string input into DocBook
+  * **convert(xs:string $input, xs:string $root-tag)**
+    Transforms markdown string input into DocBook. Ideally used inside template that can match markdown text. Root tag           defines structure based on headlines. For example, if `$root-tag = 'chapter'` all h1 headline are taken as chapter.
 
   * **get-html(xs:string $input)**
-    Same as main($input) function but this returns only HTML nodes
+    Same as main($input) function but this returns only HTML nodes as they are.
+
+  * **get-processor-info()**
+    Returns information such as product name and version of installed XSLT processor.
         
 ### 2. Running stylesheet over DocBook XML document ###
+
+  Markdown should be somehow marked up, so stylesheet could recognize it.
    
 ### 3. Using stylesheet to convert markdown documents ###
+
+  Running with property options like `-it main-from-file`
