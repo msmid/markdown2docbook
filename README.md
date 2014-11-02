@@ -50,4 +50,4 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
    
 ### 3. Using stylesheet to convert markdown documents ###
 
-  Running with property options like `-it main-from-file`
+  Running with parameters and property options like `-it main-from-file`
