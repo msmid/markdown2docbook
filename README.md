@@ -52,10 +52,10 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
   * **get-processor-info()**  
     Returns information such as product name and version of installed XSLT processor.
         
-### 2. Running stylesheet over DocBook XML document ###
-
-  Markdown should be somehow identified, so stylesheet could recognize it.
-   
-### 3. Using stylesheet to convert markdown documents ###
+### 2. Using stylesheet to convert markdown documents ###
 
   Running with parameters and property options like `-it main-from-file`
+
+###~~ 3. Running stylesheet over DocBook XML document ~~###
+
+  ~~Markdown should be somehow identified, so stylesheet could recognize it.~~
