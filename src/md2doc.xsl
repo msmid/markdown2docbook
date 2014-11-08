@@ -17,108 +17,44 @@
     <xsl:output name="docbook" encoding="UTF-8" method="xml" indent="yes"/>
     <xsl:output name="html" encoding="UTF-8" doctype-system="http://www.w3.org/TR/html4/strict.dtd"
         doctype-public="-//W3C//DTD HTML 4.01//EN"/>
-
-    <!--Parameters for input text file NOTE: přidej required-->
     
     <!--Specifies if all document should be wrapped in element (like Book or perhaps Chapter)-->
     <xsl:param name="root-element" as="xs:string" select="'book'"/>
     <!--Specifies which docbook element should be match with h1 headlines-->
     <xsl:param name="headline-element" as="xs:string" select="'chapter'"/>
     
-    <xsl:param name="input-string" as="xs:string" select="'# header'"/>
-    <xsl:param name="input" as="xs:string" select="'../test/in/test-frag.md'"/>
+    <xsl:param name="input-string" as="xs:string" select="'Default input'"/>
+    <xsl:param name="input" as="xs:string" select="''"/>
     <xsl:param name="url-file" as="xs:string"/>
     <xsl:param name="encoding-file " as="xs:string" select="string('UTF-8')"/>
-    <xsl:param name="url-savepath" as="xs:string" select="'../test/out/output.xml'"/>
-    <!--<xsl:param name="docBooktemplate" as="xs:string"/>
-    <xsl:param name="outputMethod"/>-->
-
-    <xsl:template name="main-from-string">
-        <xsl:variable name="input" select="md2doc:read-string($input-string)"/>
-        <xsl:sequence select="md2doc:main($input)"/>
-    </xsl:template>
+    <xsl:param name="url-savepath" as="xs:string" select="''"/>
     
-    <!--Main template to be called at the start of transformation-->
-    <xsl:template name="main-from-file">
-        
-<!--        <xsl:copy-of select="md2doc:parse-codespans('text **tucne `kod` tucne** konec ***`ada`*** vety.','')"/>-->
-        
-        <xsl:result-document href="../test/out/output3.xml" format="docbook">&LF;
-            <xsl:variable name="input" select="md2doc:read-file('../test/in/test-frag.md','utf-8')"/>
-            
-            <!--takovyhle template aby slo to html-->
-            <xsl:variable name="html">
-                <xsl:sequence select="md2doc:get-html($input)"/>
-            </xsl:variable>
-            
-            <xsl:sequence select="md2doc:transform-to-doc($html,$headline-element)"/>
-
-
-        </xsl:result-document>
-        
-        <xsl:result-document href="../test/out/output2.xml" format="docbook">&LF;
-           
-            <!--<xsl:variable name="input" select="md2doc:read-file('../test/in/test2.md','utf-8')"/>
-            <xsl:sequence select="md2doc:main($input, $root-element)"/>-->
-            
-        </xsl:result-document>
-        
-        <xsl:result-document href="{$url-savepath}" format="docbook">&LF;
-            <xsl:variable name="input" select="md2doc:read-file('../test/in/test-frag.md','utf-8')"/>
-
-<!--            <xsl:copy-of select="md2doc:run-block($text-stripped-blanklines)"/>-->
-            
-            <xsl:sequence select="md2doc:get-html($input)"/>
-<!--            <xsl:copy-of select="md2doc:main($input)"/>-->
-<!--            <xsl:copy-of select="md2doc:system-info()"/>-->
-            <xsl:fallback>
-                <xsl:message>
-                    <xsl:sequence select="md2doc:alert(3, error)"/>
-                </xsl:message>
-            </xsl:fallback>
-            
-        </xsl:result-document>
-        
-    </xsl:template>
     
-    <xsl:template name="main-with-html">
-        <xsl:result-document href="../test/out/out-html.xml" format="html">&LF;
-            <xsl:variable name="input" select="md2doc:read-file('../test/in/test-frag.md','utf-8')"/>
-            
-            <!--takovyhle template aby slo to html-->
-            <xsl:variable name="html">
-                <xsl:sequence select="md2doc:get-html($input)"/>
-            </xsl:variable>
-            
-            <xsl:sequence select="md2doc:transform-to-doc($html)"/>
-            
-            
-        </xsl:result-document>
-    </xsl:template>
+    <!--THIS SHEET IS ONLY FOR TESTING PURPOSES AND IT IS NOT AVAILABLE ON GITHUB-->
+    <!--<xsl:include href="md2doc-test.xsl"/>-->
     
-    <xsl:template name="main-xml">
-        
-    </xsl:template>
-        
-    <!--<xsl:template match="/" mode="#all">
-        <xsl:apply-templates select="*"/> 
-        <xsl:message>document rule: <xsl:copy-of select="."/></xsl:message>
-    </xsl:template>-->
     
-    <xsl:template match="root">
+    <xsl:template match="root" mode="md2doc:transform">
+        <xsl:param name="root-element"/>
+        <xsl:param name="headline-element"/>
         <xsl:choose>
             <xsl:when test="$root-element != ''">
                 <xsl:element name="{$root-element}">
-                    <xsl:call-template name="headline-grouping"/>
+                    <xsl:call-template name="headline-grouping">
+                        <xsl:with-param name="headline-element" select="$headline-element"/>
+                    </xsl:call-template>
                 </xsl:element>    
             </xsl:when>
             <xsl:otherwise>
-                <xsl:call-template name="headline-grouping"/>
+                <xsl:call-template name="headline-grouping">
+                    <xsl:with-param name="headline-element" select="$headline-element"/>
+                </xsl:call-template>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
     
     <xsl:template name="headline-grouping">
+        <xsl:param name="headline-element"/>
         <xsl:for-each-group select="*" 
             group-starting-with="h1|
             h2[not(preceding-sibling::h1)]|
@@ -127,11 +63,15 @@
             h5[not(preceding-sibling::h4)]|
             h6[not(preceding-sibling::h5)]
             ">                    
-            <xsl:apply-templates select="." mode="group"/>
+            <xsl:apply-templates select="." mode="group">
+                <xsl:with-param name="headline-element" select="$headline-element"/>
+            </xsl:apply-templates>
+<!--            <xsl:message select="'headline grouping: ',."/>-->
         </xsl:for-each-group>
     </xsl:template>
     
     <xsl:template match="h1|h2|h3|h4|h5|h6" mode="group">
+        <xsl:param name="headline-element"/>
         <xsl:variable name="this" select="name()"/>
         <xsl:variable name="next" select="translate($this, '123456', '234567')"/>
         <xsl:element name="{
@@ -139,126 +79,112 @@
             then $headline-element 
             else concat('sect',translate(replace($this,'h',''),'23456','12345'))
             }">
-            <title><xsl:value-of select="."/></title>
+            <title><xsl:apply-templates select="." mode="md2doc:transform"/></title>
             <xsl:for-each-group select="current-group() except ." group-starting-with="*[name() = $next]">
                 <xsl:apply-templates select="." mode="group"/>
-<!--                <xsl:message>hX rule: <xsl:copy-of select="."/></xsl:message>-->
+                <!--<xsl:message>hX rule: <xsl:copy-of select="."/></xsl:message>-->
             </xsl:for-each-group>
         </xsl:element>
     </xsl:template> 
     
     <xsl:template match="p" mode="group">
-        <xsl:apply-templates select="current-group()"/>
-<!--        <xsl:message select="'Rule * group mode: ', current-group()"/>-->
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
+        <!--<xsl:message select="'Rule * group mode: ', current-group()"/>-->
     </xsl:template>
     
-    <xsl:template match="p">
-<!--        <para><xsl:copy-of select="node()|@*"/></para>-->
+    <xsl:template match="p" mode="md2doc:transform">
         <para><xsl:apply-templates/></para>
-<!--        <xsl:message select="'Rule p no mode: ', ."/>-->
+        <!--<xsl:message select="'Rule p no mode: ', ."/>-->
     </xsl:template>
     
     <xsl:template match="blockquote" mode="group">
-        <xsl:apply-templates select="current-group()"/>
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
-    <xsl:template match="blockquote">
+    <xsl:template match="blockquote" mode="md2doc:transform">
         <xsl:copy>
-            <xsl:apply-templates/>
+            <xsl:apply-templates mode="md2doc:transform"/>
         </xsl:copy>
     </xsl:template>
        
-    <xsl:template match="blockquote/h1">
-        <title><xsl:apply-templates/></title>
+    <xsl:template match="blockquote/h1" mode="md2doc:transform">
+        <title><xsl:apply-templates mode="md2doc:transform"/></title>
     </xsl:template>
-    
-    <!--<xsl:template match="blockquote/pre">
-        <example>
-            <xsl:apply-templates/>
-        </example>
-    </xsl:template>-->
     
     <xsl:template match="ul" mode="group">
-        <xsl:apply-templates select="current-group()"/>
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
-    <xsl:template match="ul">
+    <xsl:template match="ul" mode="md2doc:transform">
         <itemizedlist>
-            <xsl:apply-templates/>
+            <xsl:apply-templates mode="md2doc:transform"/>
         </itemizedlist>
     </xsl:template>
     
     <xsl:template match="ol" mode="group">
-        <xsl:apply-templates select="current-group()"/>
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
-    <xsl:template match="ol">
+    <xsl:template match="ol" mode="md2doc:transform">
         <orderedlist>
-            <xsl:apply-templates select="*"/>
+            <xsl:apply-templates select="*" mode="md2doc:transform"/>
         </orderedlist>
     </xsl:template>
     
-    <xsl:template match="li">
+    <xsl:template match="li" mode="md2doc:transform">
         <listitem>
-            <xsl:apply-templates select="*"/>
+            <xsl:apply-templates select="*" mode="md2doc:transform"/>
         </listitem>
     </xsl:template>
     
-    <xsl:template match="li/h1">
-        <xsl:apply-templates/>
+    <xsl:template match="li/h1" mode="md2doc:transform">
+        <xsl:apply-templates mode="md2doc:transform"/>
     </xsl:template>
     
     <xsl:template match="pre" mode="group">
-        <xsl:apply-templates select="current-group()"/>
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
-    <xsl:template match="pre">
+    <xsl:template match="pre" mode="md2doc:transform">
         <example>
-            <xsl:apply-templates/>    
+            <xsl:apply-templates mode="md2doc:transform"/>    
         </example>
     </xsl:template>
     
-    <xsl:template match="code[ancestor::pre]">
+    <xsl:template match="code[ancestor::pre]" mode="md2doc:transform">
         <programlisting>         
             <xsl:value-of select="." disable-output-escaping="no"/>
         </programlisting>
     </xsl:template>
     
     <xsl:template match="xmp" mode="group">
-        <xsl:apply-templates select="current-group()"/>      
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>      
     </xsl:template>
     
     <xsl:template match="hr" mode="group">
-        <xsl:apply-templates select="current-group()"/>
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
-    <xsl:template match="hr"/>
+    <xsl:template match="hr" mode="md2doc:transform"/>
     
     <!--to html by chtelo osetrit jeste driv, a samotny html elementy pres identity template-->
-    <xsl:template match="xmp">
+    <xsl:template match="xmp" mode="md2doc:transform">
         <xsl:value-of select="text()" disable-output-escaping="yes"/>      
     </xsl:template>
     
-    <xsl:template match="code">
+    <xsl:template match="code" mode="md2doc:transform">
         <computeroutput>
             <xsl:value-of select="." disable-output-escaping="yes"/>
         </computeroutput>
     </xsl:template>
     
-    <xsl:template match="em|strong">
+    <xsl:template match="em|strong" mode="md2doc:transform">
         <emphasis>
-            <xsl:apply-templates select="node()|@*"/>
+            <xsl:apply-templates select="node()|@*" mode="md2doc:transform"/>
         </emphasis>
     </xsl:template>
     
-    <!--strong nema tak nejak opak v docbooku-->
-    <!--<xsl:template match="strong">
-        <emphasis>
-            <xsl:apply-templates select="node()|@*"/>
-        </emphasis>
-    </xsl:template>-->
-    
-    <xsl:template match="img">
+    <xsl:template match="img" mode="md2doc:transform">
         <inlinemediaobject>
             <imageobject>
                 <imagedata fileref="{@src}"/>
@@ -268,7 +194,7 @@
         </inlinemediaobject>
     </xsl:template>
     
-    <xsl:template match="a">
+    <xsl:template match="a" mode="md2doc:transform">
         <link>
             <xsl:attribute name="xl:href">
                 <xsl:value-of select="@href"/>
@@ -276,7 +202,7 @@
             <xsl:if test="@href != ''">
                 <alt><xsl:value-of select="@title"/></alt>
             </xsl:if>         
-            <xsl:apply-templates select="*"/>
+            <xsl:apply-templates select="*" mode="md2doc:transform"/>
         </link>
     </xsl:template>
     
@@ -284,12 +210,6 @@
         <xsl:copy>
             <xsl:apply-templates select="node()|@*" mode="#current"/>
         </xsl:copy>
-    </xsl:template>
-    
-    <xsl:template name="md2doc:convert">
-        <xsl:param name="input"/>
-        <xsl:param name="root-tag"/>
-        <xsl:copy-of select="$root-tag"/>
     </xsl:template>
     
 </xsl:transform>
