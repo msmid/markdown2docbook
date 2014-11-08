@@ -40,7 +40,7 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
 
     To be clear, headline element is defining component-level tag and root element is defining division-level tag of             DocBook. If you want to use some component-level tag like `article` as a root one, you can use this function like this:      `convert($input, '', 'article')`.
     
-    If you don't want to use root (division-level) element, leave it blank `''`. Example: `convert($input, 'chapter', '')`  
+    If you don't want to use root (division-level) element, leave it blank. For example: `convert($input, 'chapter', '')`  
     **WARNING** This usage does not return well-formed document!
     
     If you leave second and third argument blank, eg. `convert($input, '','')`, headline grouping will use sect1-6 and no        division and no componont elements are used. This also does not produce well-formed document.
