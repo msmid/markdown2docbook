@@ -36,7 +36,7 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
   Now you can use following md2doc functions:
      
   * **convert(xs:string $input, xs:string $headline-element, xs:string $root-element)**  
-    Transforms markdown string input into DocBook. Ideally used inside template that can match markdown text. Headline           element defines structure based on headlines. For example, if `$headline-element = 'chapter'`. all h1 headlines are taken     as chapter. Root element otherwise defines if whole document should be wrapped in root element like `<book>` or              `<article>`. This argument is optional.
+    Transforms markdown string input into DocBook. Ideally used inside template that can match markdown text. Headline           element defines structure based on headlines. For example, if `$headline-element = 'chapter'` all h1 headlines are taken     as chapter and its siblings are grouped together. Otherwise root element defines if whole document should be wrapped in      root element like `<book>` or `<article>`.
 
     To be clear, headline element is defining component-level tag and root element is defining division-level tag of             DocBook. If you want to use some component-level tag like `article` as a root one, you can use this function like this:      `convert($input, '', 'article')`.
     
@@ -44,7 +44,7 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
     `convert($input, 'chapter', '')`  
     **WARNING** This usage does not return well-formed document!
     
-    If you leave second and third argument blank, eg. `convert($input, '','')`, headline grouping will use sect1-6 and no        division and no componont elements are used. This also does not produce well-formed document.
+    If you leave second and third argument blank, eg. `convert($input, '','')`, headline grouping will use sect1-6 and no        division and no component elements are used. This also does not produce well-formed document.
 
   * **read-file(xs:string $uri, xs:string $encoding)**  
     Attempts to read a file on path defined by $uri. If file can be located and has correct enconding as supplied by second      argument, function returns content of the file as a string. Otherwise, it shows error message. You can use this to supply     input for convert() functions.
