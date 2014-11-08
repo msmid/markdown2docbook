@@ -14,22 +14,6 @@
     <xsl:function name="md2doc:convert">
         <xsl:param name="input" as="xs:string"/>
         <xsl:param name="headline-element" as="xs:string"/>
-        
-        <xsl:variable name="text-united" select="md2doc:unite-endlines($input)"/>
-        <xsl:variable name="text-stripped-blanklines" select="md2doc:strip-blanklines($text-united)"/>
-        <xsl:variable name="text-stripped-refs" select="md2doc:strip-references($text-stripped-blanklines)"/>
-        
-        <xsl:variable name="refs" select="md2doc:save-references($text-stripped-blanklines)"/>
-        
-        <xsl:variable name="html" select="md2doc:run-block($text-stripped-refs, $refs)"/>
-        
-        <xsl:sequence select="md2doc:transform-to-doc($html, $headline-element)"/>
-        
-    </xsl:function>
-    
-    <xsl:function name="md2doc:convert">
-        <xsl:param name="input" as="xs:string"/>
-        <xsl:param name="headline-element" as="xs:string"/>
         <xsl:param name="root-element" as="xs:string"/>
         
         <xsl:variable name="text-united" select="md2doc:unite-endlines($input)"/>
@@ -42,21 +26,6 @@
         
         <xsl:sequence select="md2doc:transform-to-doc($html, $headline-element ,$root-element)"/>
         
-    </xsl:function>
-    
-    <xsl:function name="md2doc:transform-to-doc">
-        <xsl:param name="html-input"/>
-        <xsl:param name="headline-element"/>
-        
-        <xsl:variable name="input">
-            <root>
-                <xsl:sequence select="$html-input"/>
-            </root>
-        </xsl:variable>
-        
-        <xsl:apply-templates select="$input" mode="md2doc:transform">
-            <xsl:with-param name="headline-element" select="$headline-element"/>
-        </xsl:apply-templates>
     </xsl:function>
     
     <xsl:function name="md2doc:transform-to-doc">
@@ -172,12 +141,12 @@
                 <xsl:analyze-string select="." 
                     regex="(^&lt;({$html-tags})\b(.*)*?&lt;/\2&gt;[ \t]*(?=\n+|\Z))" flags="m!">
                     <xsl:matching-substring>
-                        <xmp><xsl:value-of select="."/></xmp>
+                        <textarea><xsl:value-of select="."/></textarea>
                     </xsl:matching-substring>
                     <xsl:non-matching-substring>
                         <xsl:analyze-string select="." regex="(^&lt;({$html-tags})\b(.*\n)*?&lt;/\2&gt;[ \t]*(?=\n+|\Z))" flags="m!">
                             <xsl:matching-substring>
-                                <xmp><xsl:value-of select="."/></xmp>
+                                <textarea><xsl:value-of select="."/></textarea>
                             </xsl:matching-substring>
                             <xsl:non-matching-substring>
                                 <!--Dont forget on <hr />-->
@@ -434,7 +403,7 @@
         <xsl:variable name="text" select="string-join($input,'')"/>
         <xsl:analyze-string select="$text" regex="(&lt;(\w+)\b(.*\n)*?.*&lt;/\2&gt;)" flags="!">
             <xsl:matching-substring>
-                <xmp><xsl:sequence select="md2doc:parse-codespans(.,$refs)"/></xmp>
+                <textarea><xsl:sequence select="md2doc:parse-codespans(.,$refs)"/></textarea>
             </xsl:matching-substring>
             <xsl:non-matching-substring>
                 <xsl:sequence select="md2doc:parse-spans(.,$refs)"/>
