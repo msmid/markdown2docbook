@@ -56,6 +56,6 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
 
   Running with parameters and property options like `-it main-from-file`
 
-###~~ 3. Running stylesheet over DocBook XML document ~~###
+~~### 3. Running stylesheet over DocBook XML document ###~~
 
   ~~Markdown should be somehow identified, so stylesheet could recognize it.~~
