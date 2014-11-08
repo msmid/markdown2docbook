@@ -25,7 +25,7 @@ Getting started
 Downloading the stylesheet is pretty much all you have to do. I assume you have editors/tools for running XSLT. 
 Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if you have free Home Edition or commercial EE respectively PE. It works on the whole family! 
 
-### 1. Importing md2doc stylesheet in another stylesheet ###
+### 1. Importing md2doc stylesheet into another stylesheet ###
       
   Let's say you have your own xsl stylesheet and you want to use certain md2doc functions.
   There is nothing easier. Use `<xsl:include>` element. Don't forget about namespace! Be sure to add md2doc URI                `http://www.markdown2docbook.com/ns/markdown2docbook` among other namespace declarations. Example:
