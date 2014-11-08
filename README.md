@@ -28,7 +28,7 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
 ### 1. Importing md2doc stylesheet into another stylesheet ###
       
   Let's say you have your own xsl stylesheet and you want to use certain md2doc functions.
-  There is nothing easier. Use `<xsl:include>` element. Don't forget about namespace! Be sure to add md2doc URI                `http://www.markdown2docbook.com/ns/markdown2docbook` among other namespace declarations. Example:
+  There is nothing easier. Use `<xsl:import>` element. Don't forget about namespace! Be sure to add md2doc URI                `http://www.markdown2docbook.com/ns/markdown2docbook` among other namespace declarations. Example:
 
     <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xmlns:md2doc="http://www.markdown2docbook.com/ns/md2doc"> ...
@@ -44,7 +44,7 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
     Same as above but without defining root element. Warning, this function doesn't return well-formed document!
 
   * **read-file(xs:string $uri, xs:string $encoding)**  
-    Attempts to read a file on path defined by $uri. If file can be located and has correct enconding as supplied by second      argument, function returns content of the file as a string. Otherwise, it shows error message.
+    Attempts to read a file on path defined by $uri. If file can be located and has correct enconding as supplied by second      argument, function returns content of the file as a string. Otherwise, it shows error message. You can use this to supply     input for convert() functions.
 
   * **get-html(xs:string $input)**  
     This function simulates Markdown parsing into HTML. It creates same output as original parser by Mark Gruber written in      Perl. When talking about DocBook, you won't probably find usage for this function at all, but it can be used as a way how     to parse Markdown to HTML using XSLT 2.0.
