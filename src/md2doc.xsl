@@ -30,9 +30,18 @@
     <xsl:param name="url-savepath" as="xs:string" select="''"/>
     
     
-    <!--THIS SHEET IS ONLY FOR TESTING PURPOSES AND IT IS NOT AVAILABLE ON GITHUB-->
-    <!--<xsl:include href="md2doc-test.xsl"/>-->
+    <!--THIS SHEET IS ONLY FOR TESTING PURPOSES, IT CONTAINS INITIAL TEMPLATES-->
+    <xsl:include href="md2doc-test.xsl"/>
     
+    <xsl:template name="md2doc:main">
+        <xsl:param name="root-element" as="xs:string" select="$root-element"/>
+        <xsl:param name="headline-element" as="xs:string" select="$headline-element"/>        
+        <xsl:param name="input-string" as="xs:string" select="$input-string"/>
+        <xsl:param name="input" as="xs:string" select="$input"/>
+        <xsl:param name="url-file" as="xs:string" select="$url-file"/>
+        <xsl:param name="encoding-file " as="xs:string" select="$encoding-file"/>
+        <xsl:param name="url-savepath" as="xs:string" select="$url-savepath"/>
+    </xsl:template>
     
     <xsl:template match="root" mode="md2doc:transform">
         <xsl:param name="root-element"/>
@@ -157,20 +166,28 @@
         </programlisting>
     </xsl:template>
     
-    <xsl:template match="xmp" mode="group">
-        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>      
-    </xsl:template>
-    
     <xsl:template match="hr" mode="group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
     <xsl:template match="hr" mode="md2doc:transform"/>
     
-    <!--to html by chtelo osetrit jeste driv, a samotny html elementy pres identity template-->
-    <xsl:template match="xmp" mode="md2doc:transform">
-        <xsl:value-of select="text()" disable-output-escaping="yes"/>      
+    <xsl:template match="textarea" mode="group">
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>      
     </xsl:template>
+    
+    <xsl:template match="textarea" mode="md2doc:transform">
+        <example>
+            <programlisting language="html">
+                <xsl:value-of select="text()" disable-output-escaping="no"/> 
+            </programlisting>
+        </example>          
+    </xsl:template>
+    
+    <!--During seriliazation, this template will cause that textarea string is turned into html-->
+    <!--<xsl:template match="textarea" mode="md2doc:transform">
+        <xsl:value-of select="text()" disable-output-escaping="yes"/>      
+    </xsl:template>-->
     
     <xsl:template match="code" mode="md2doc:transform">
         <computeroutput>

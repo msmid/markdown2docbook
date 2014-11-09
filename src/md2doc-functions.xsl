@@ -9,7 +9,7 @@
     exclude-result-prefixes="xs md2doc sax"
     version="2.0">
     
-    <!--INITIATION FUNCTIONS-->
+    <!--FUNCTIONS LIBRARY-->
     
     <xsl:function name="md2doc:convert">
         <xsl:param name="input" as="xs:string"/>

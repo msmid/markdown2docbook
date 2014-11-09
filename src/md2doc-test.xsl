@@ -72,7 +72,8 @@
     </xsl:template>
     
     <xsl:template name="main-from-string">
-        <xsl:sequence select="md2doc:convert($input, $headline-element,'')"/>
+        <xsl:sequence select="md2doc:convert($input-string, $headline-element,'')"/>
+        
     </xsl:template>
     
 </xsl:stylesheet>
