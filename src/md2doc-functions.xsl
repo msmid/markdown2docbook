@@ -9,14 +9,36 @@
     exclude-result-prefixes="xs md2doc sax"
     version="2.0">
     
+    <xsl:import href="md2doc-templates.xsl"/>
+    
     <!--FUNCTIONS LIBRARY-->
     
     <xsl:function name="md2doc:convert">
         <xsl:param name="input" as="xs:string"/>
-        <xsl:param name="headline-element" as="xs:string"/>
         <xsl:param name="root-element" as="xs:string"/>
+        <xsl:param name="headline-element" as="xs:string"/>     
         
-        <xsl:variable name="text-united" select="md2doc:unite-endlines($input)"/>
+        <xsl:variable name="text-united" select="md2doc:unify-endlines($input)"/>
+        <xsl:variable name="text-stripped-blanklines" select="md2doc:strip-blanklines($text-united)"/>
+        <xsl:variable name="text-stripped-refs" select="md2doc:strip-references($text-stripped-blanklines)"/>
+        
+        <xsl:variable name="refs" select="md2doc:save-references($text-stripped-blanklines)"/>
+        
+        <xsl:variable name="html" select="md2doc:run-block($text-stripped-refs, $refs)"/>
+        
+        <xsl:sequence select="md2doc:transform-to-doc($html, $headline-element ,$root-element)"/>
+        
+    </xsl:function>
+    
+    <xsl:function name="md2doc:convert">
+        <xsl:param name="uri-file" as="xs:string"/>
+        <xsl:param name="encoding" as="xs:string"/>
+        <xsl:param name="root-element" as="xs:string"/>
+        <xsl:param name="headline-element" as="xs:string"/>     
+        
+        <xsl:variable name="input" select="md2doc:read-file($uri-file, $encoding)"/>
+        
+        <xsl:variable name="text-united" select="md2doc:unify-endlines($input)"/>
         <xsl:variable name="text-stripped-blanklines" select="md2doc:strip-blanklines($text-united)"/>
         <xsl:variable name="text-stripped-refs" select="md2doc:strip-references($text-stripped-blanklines)"/>
         
@@ -30,8 +52,8 @@
     
     <xsl:function name="md2doc:transform-to-doc">
         <xsl:param name="html-input"/>
-        <xsl:param name="headline-element"/>
         <xsl:param name="root-element"/>
+        <xsl:param name="headline-element"/>
         
         <xsl:variable name="input">
             <root>
@@ -63,7 +85,7 @@
         </xsl:choose>
     </xsl:function>
     
-    <xsl:function name="md2doc:unite-endlines">
+    <xsl:function name="md2doc:unify-endlines">
         <xsl:param name="text" as="xs:string"/>
         
         <xsl:variable name="output" select="replace(replace($text,'\r\n','&#xA;'), '\r', '&#xA;')"/>
@@ -239,16 +261,16 @@
         
         <xsl:variable name="text" select="string-join($input,'')"/>
         <xsl:analyze-string select="$text" 
-            regex="((^\n([ ]{{0,3}})([*+-]|\d+[.])[ \t]+)(.+\n)*\n*( .+\n*)*)+" flags="m!">
+            regex="((^([ ]{{0,3}})([*+-]|\d+[.])[ \t]+)(.+\n)*\n*( .+\n*)*)+" flags="m!">
             <xsl:matching-substring>
                 <xsl:variable name="indent">
-                    <xsl:analyze-string select="." regex="^\n( {{0,3}}).+">
+                    <xsl:analyze-string select="." regex="^( {{0,3}}).+">
                         <xsl:matching-substring>
                             <xsl:sequence select="string-length(regex-group(1))"/>
                         </xsl:matching-substring>
                     </xsl:analyze-string>
                 </xsl:variable>
-                <xsl:element name="{if (matches(.,'^\n[ ]*[*+-]','m')) then 'ul' else 'ol'}">
+                <xsl:element name="{if (matches(.,'^[ ]*[*+-]','m')) then 'ul' else 'ol'}">
                     <xsl:sequence select="md2doc:parse-list-items(., $indent, $refs)"/>
                 </xsl:element>
                 <!--debug-->
@@ -278,12 +300,12 @@
                         then replace($stripList, concat('^ {', $indent, '}'),'','m') 
                         else $stripList"/>
                     <xsl:variable name="chop">
-                        <xsl:analyze-string select="$trim" regex="^ *([*+-]|\d+\.)" flags="m!">
+                        <xsl:analyze-string select="$trim" regex="^ *([*+-]|\d+\.)(.+)$" flags="m!">
                             <xsl:matching-substring>
                                 <xsl:value-of select="
                                     if ($indent != 0) 
                                     then replace(., concat('^ {', $indent, '}'),'','m') 
-                                    else ."/>
+                                    else replace(., concat('^ {', 1, '}'),'','m')"/>
                             </xsl:matching-substring>
                             <xsl:non-matching-substring>
                                 <xsl:variable name="del" select="concat('^ {', 4 - $indent, '}')"/>
@@ -347,23 +369,49 @@
         <xsl:param name="refs"/>
         
         <xsl:variable name="text" select="string-join($input,'')"/>
+<!--        <inputText><xsl:value-of select="$text"/></inputText>-->
+        <!--<xsl:analyze-string select="$text" regex="^.+\n{{2,}}" flags="m">
+            <xsl:matching-substring>
+                <p><xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),'([ ]|\n)+$',''), $refs)"/></p>
+            </xsl:matching-substring>
+            <xsl:non-matching-substring>
+                <xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),'([ ]|\n)+$',''), $refs)"/>
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>-->
         
-        <!--<xsl:choose>
-            <xsl:when test="matches($text,'(\n{2,})','m')">
-                <xsl:for-each select="$split">
-<!-\-                    <p><xsl:copy-of select="replace(.,' +$','')"/></p>-\->
-                    <p><xsl:copy-of select="normalize-space(.)"/></p>
-                </xsl:for-each>
-            </xsl:when>
-            <xsl:otherwise>
-                <bez><xsl:copy-of select="normalize-space($text)"/></bez>
-<!-\-                <xsl:copy-of select="replace(replace($text,'^\n',''),'\n+$','')"/>-\->
-            </xsl:otherwise>
-        </xsl:choose>-->
-        <xsl:variable name="split" select="tokenize(replace(replace($text,'^\n',''),'\n+$',''),'\n{2,}')"/>
+<!--        <xsl:variable name="split" select="tokenize(replace(replace($text,'^\n',''),'\n+$',''),'\n{2,}')"/>-->
+        <xsl:variable name="split" select="tokenize($text,'\n{2,}')"/>
         <xsl:for-each select="$split">
+            <xsl:choose>
+                <xsl:when test="matches(.,'^$')">
+                    
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:choose>
+                        <xsl:when test="matches(.,'\n$')">
+                            <xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),'([ ]|\n)+$',''), $refs)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <p><xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),'([ ]|\n)+$',''), $refs)"/></p>
+<!--                            <paracontent><xsl:value-of select="."/></paracontent>-->
+                        </xsl:otherwise>
+                    </xsl:choose>
+                    <!--<p><xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),'([ ]|\n)+$',''), $refs)"/></p>
+                    <paracontent><xsl:value-of select="."/></paracontent>-->
+                </xsl:otherwise>
+            </xsl:choose>
+            
             <!--<p><xsl:copy-of select="md2doc:run-inline(replace(replace(replace(.,'\n',' '),'^ +',''),' +$',''), $refs)"/></p>-->
-            <p><xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),' +$',''), $refs)"/></p>
+            <!--<p><xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),' +$',''), $refs)"/></p>
+            <paracontent><xsl:value-of select="."/></paracontent>-->
+            <!--<xsl:choose>
+                <xsl:when test="matches(.,'\n$')">
+                    <p><xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),' +$',''), $refs)"/></p>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),' +$',''), $refs)"/>
+                </xsl:otherwise>
+            </xsl:choose>-->
         </xsl:for-each>
     </xsl:function>
     
@@ -380,12 +428,12 @@
         
         <xsl:variable name="text" select="string-join($input,'')"/>
         <xsl:analyze-string select="$text" 
-            regex="(\*|_)+(?=\S)(.*?[*_]*)(`+)(.+?)(?&lt;!`)\3(?!`).*?(?&lt;=\S)(\*|_)+" flags="!">
+            regex="(\*|_)+(?=\S)(.*?[*_]*)(?&lt;!\\)(`+)(.+?)(?&lt;!`)\3(?!`).*?(?&lt;=\S)(\*|_)+" flags="!">
             <xsl:matching-substring>
                 <xsl:sequence select="md2doc:parse-spans(., $refs)"/>
             </xsl:matching-substring>
             <xsl:non-matching-substring>
-                <xsl:analyze-string select="." regex="(`+)(.+?)(?&lt;!`)\1(?!`)" flags="!">
+                <xsl:analyze-string select="." regex="(?&lt;!\\)(`+)(.+?)(?&lt;!`)\1(?!`)" flags="!">
                     <xsl:matching-substring>
                         <code><xsl:value-of select="normalize-space(regex-group(2))"/></code>
                     </xsl:matching-substring>
@@ -554,7 +602,7 @@
     
     <xsl:function name="md2doc:get-html">
         <xsl:param name="input" as="xs:string"/>
-        <xsl:variable name="text-united" select="md2doc:unite-endlines($input)"/>
+        <xsl:variable name="text-united" select="md2doc:unify-endlines($input)"/>
         <xsl:variable name="text-stripped-blanklines" select="md2doc:strip-blanklines($text-united)"/>
         <xsl:variable name="text-stripped-refs" select="md2doc:strip-references($text-stripped-blanklines)"/>
         
@@ -564,6 +612,25 @@
     </xsl:function>
     
     <!--OTHER FUNCTIONS-->
+    
+    <xsl:function name="md2doc:get-processor-info">
+        <xsl:variable name="output">
+            <xsl:value-of select="'&#xA;XSLT ',system-property('xsl:version')" />
+            <xsl:value-of select="'&#xA;Vendor: ', system-property('xsl:vendor')" />
+            <xsl:value-of select="' ', system-property('xsl:vendor-url')" />
+            <xsl:value-of select="'&#xA;Product name: ', system-property('xsl:product-name')" />
+            <xsl:value-of select="'&#xA;Product version: ', system-property('xsl:product-version')" />
+        </xsl:variable>
+        <xsl:sequence select="$output"/>
+    </xsl:function>
+    
+    <xsl:function name="md2doc:print-disclaimer">
+        <xsl:comment>
+Generated using md2doc.xsl by Martin Smid ©2014
+on <xsl:value-of select="current-dateTime()"/>
+------------------------<xsl:value-of select="md2doc:get-processor-info()"/>
+        </xsl:comment>&LF;
+    </xsl:function>
     
     <xsl:function name="md2doc:alert">
         <xsl:param name="number" as="xs:integer"/>
@@ -576,15 +643,6 @@
         <xsl:sequence select="$messages/message[@type=$type][@no=$number]/text()"/>
     </xsl:function>
       
-    <xsl:function name="md2doc:get-processor-info">
-        <xsl:variable name="output">
-            <xsl:value-of select="'&#xA;XSLT ',system-property('xsl:version')" />
-            <xsl:value-of select="'&#xA;Vendor: ', system-property('xsl:vendor')" />
-            <xsl:value-of select="' ', system-property('xsl:vendor-url')" />
-            <xsl:value-of select="'&#xA;Product name: ', system-property('xsl:product-name')" />
-            <xsl:value-of select="'&#xA;Product version: ', system-property('xsl:product-version')" />
-        </xsl:variable>
-        <xsl:sequence select="$output"/>
-    </xsl:function>
+    
     
 </xsl:stylesheet>
