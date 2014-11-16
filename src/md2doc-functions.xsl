@@ -5,11 +5,14 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:md2doc="http://www.markdown2docbook.com/ns/md2doc"
+    xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns:sax="http://saxon.sf.net/"
-    exclude-result-prefixes="xs md2doc sax"
+    xmlns:d="data:,dpc"
+    exclude-result-prefixes="xs d md2doc html sax"
     version="2.0">
     
     <xsl:import href="md2doc-templates.xsl"/>
+    <xsl:import href="htmlparse.xsl"/>
     
     <!--FUNCTIONS LIBRARY-->
     
@@ -26,7 +29,7 @@
         
         <xsl:variable name="html" select="md2doc:run-block($text-stripped-refs, $refs)"/>
         
-        <xsl:sequence select="md2doc:transform-to-doc($html, $headline-element ,$root-element)"/>
+        <xsl:sequence select="md2doc:transform-to-doc($html, $root-element, $headline-element)"/>
         
     </xsl:function>
     
@@ -46,7 +49,7 @@
         
         <xsl:variable name="html" select="md2doc:run-block($text-stripped-refs, $refs)"/>
         
-        <xsl:sequence select="md2doc:transform-to-doc($html, $headline-element ,$root-element)"/>
+        <xsl:sequence select="md2doc:transform-to-doc($html, $root-element, $headline-element)"/>
         
     </xsl:function>
     
@@ -150,28 +153,53 @@
         <xsl:param name="refs"/>
         
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:variable name="html-tags" 
-            select="string('article|aside|body|blockquote|button|canvas|div|dl|embed|fieldset|footer|form|h[1-6]|header|map|nav|object|ol|p|pre|section|table|ul|video|script|noscript|iframe|math|ins|del|')"/>
-        <!--Start with comments-->
+        <!--List of accepted html elements-->
+        <xsl:variable name="block-html" 
+            select="string('article|aside|body|blockquote|button|canvas|div|dl|embed|figure|fieldset|footer|form|h[1-6]|header|map|nav|object|ol|p|pre|section|table|ul|video|script|noscript|iframe|math|ins')"/>
+ 
         <xsl:analyze-string select="$text" 
-            regex="(?&lt;=\n\n)([ ]{{0,3}}(&lt;!(-\-(.*?)-\-\s*)+&gt;)[ \t]*(?=\n{{2,}}))" flags="m!">
+            regex="(^&lt;({$block-html})\b(.*)*?&lt;/\2&gt;[ \t]*(?=\n+|\Z))" flags="m!">
+            <xsl:matching-substring>
+                <xsl:sequence select="d:htmlparse(.,'',false())"/>
+                <xsl:message select="."/>
+            </xsl:matching-substring>
+            <xsl:non-matching-substring>
+                <xsl:analyze-string select="." regex="(^&lt;({$block-html})\b(.*\n)*?&lt;/\2&gt;[ \t]*(?=\n+|\Z))" flags="m!">
+                    <xsl:matching-substring>
+                        <xsl:sequence select="d:htmlparse(.,'',true())"/>
+                        <xsl:message select="."/>
+                    </xsl:matching-substring>
+                    <xsl:non-matching-substring>
+                        <xsl:sequence select="md2doc:parse-headers(., $refs)"/> 
+                    </xsl:non-matching-substring>
+                </xsl:analyze-string>   
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>
+
+
+        <!--<xsl:analyze-string select="$text" 
+            regex="(?&lt;=\n\n)([ ]{{0,3}}(&lt;!(-\\-(.*?)-\\-\s*)+&gt;)[ \t]*(?=\n{{2,}}))" flags="m!">
             <xsl:matching-substring>
                 <xsl:comment><xsl:value-of select="regex-group(4)"/></xsl:comment>
             </xsl:matching-substring>
             <xsl:non-matching-substring>
-                <!--Then proceed on html block elements-->
+                <!-\-Then proceed on html block elements-\->
                 <xsl:analyze-string select="." 
                     regex="(^&lt;({$html-tags})\b(.*)*?&lt;/\2&gt;[ \t]*(?=\n+|\Z))" flags="m!">
                     <xsl:matching-substring>
-                        <textarea><xsl:value-of select="."/></textarea>
+                        <!-\-<textarea><xsl:value-of select="."/></textarea>-\->
+                        <xsl:sequence select="d:htmlparse(.,'',false())"/>
+                        <xsl:message select="."/>
                     </xsl:matching-substring>
                     <xsl:non-matching-substring>
                         <xsl:analyze-string select="." regex="(^&lt;({$html-tags})\b(.*\n)*?&lt;/\2&gt;[ \t]*(?=\n+|\Z))" flags="m!">
                             <xsl:matching-substring>
-                                <textarea><xsl:value-of select="."/></textarea>
+                                <!-\-<textarea><xsl:value-of select="."/></textarea>-\->
+                                <xsl:sequence select="d:htmlparse(.,'',true())"/>
+                                <xsl:message select="."/>
                             </xsl:matching-substring>
                             <xsl:non-matching-substring>
-                                <!--Dont forget on <hr />-->
+                                <!-\-Dont forget on <hr />-\->
                                 <xsl:analyze-string select="." 
                                     regex="(?&lt;=\n\n)([ ]{{0,3}}&lt;(hr)\b([^&lt;&gt;])*?/?&gt;[ \t]*(?=\n{{2,}}))" flags="m!">
                                     <xsl:matching-substring>
@@ -186,7 +214,7 @@
                     </xsl:non-matching-substring>
                 </xsl:analyze-string>
             </xsl:non-matching-substring>
-        </xsl:analyze-string>
+        </xsl:analyze-string>-->
     </xsl:function>
     
     <xsl:function name="md2doc:parse-headers">
@@ -449,9 +477,13 @@
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:analyze-string select="$text" regex="(&lt;(\w+)\b(.*\n)*?.*&lt;/\2&gt;)" flags="!">
+        <!--List of accepted html elements-->
+        <xsl:variable name="inline-html" select="string('i|b|del')"/>
+        
+        <xsl:analyze-string select="$text" regex="(&lt;({$inline-html})\b(.*\n)*?.*&lt;/\2&gt;)" flags="!">
             <xsl:matching-substring>
-                <textarea><xsl:sequence select="md2doc:parse-codespans(.,$refs)"/></textarea>
+<!--                <textarea><xsl:sequence select="md2doc:parse-codespans(.,$refs)"/></textarea>-->
+                <xsl:sequence select="d:htmlparse(.,'',true())"/>
             </xsl:matching-substring>
             <xsl:non-matching-substring>
                 <xsl:sequence select="md2doc:parse-spans(.,$refs)"/>

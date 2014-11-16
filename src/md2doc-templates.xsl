@@ -133,7 +133,14 @@
     
     <xsl:template match="li" mode="md2doc:transform">
         <listitem>
-            <xsl:apply-templates select="*" mode="md2doc:transform"/>
+            <xsl:choose>
+                <xsl:when test="p">
+                    <xsl:apply-templates select="node()|@*" mode="md2doc:transform"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <para><xsl:apply-templates select="node()|@*" mode="md2doc:transform"/></para>
+                </xsl:otherwise>
+            </xsl:choose>
         </listitem>
     </xsl:template>
     
@@ -214,10 +221,117 @@
         </link>
     </xsl:template>
     
-    <xsl:template match="node()|@*" name="identity" mode="#all">
+    <!--HTML TEMPLATES-->
+    
+    <!--Semantically unimportant block elements-->
+    <xsl:template match="div|header|section|article|aside|figure" mode="group">
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
+    </xsl:template>
+    
+    <xsl:template match="div" mode="md2doc:transform">
+        <xsl:apply-templates select="node()|@*" mode="md2doc:transform"/>
+    </xsl:template>
+    
+    <!--Table transform-->   
+    <xsl:template match="table" mode="group">
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
+    </xsl:template>
+    
+    <xsl:template match="table" mode="md2doc:transform">
+        <xsl:choose>
+            <xsl:when test="caption">
+                <table>
+                    <xsl:apply-templates mode="md2doc:transform"/>
+                </table>
+            </xsl:when>
+            <xsl:otherwise>
+                <informaltable>
+                    <xsl:apply-templates mode="md2doc:transform"/>
+                </informaltable>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+    
+    <xsl:template match="thead" mode="md2doc:transform">
+        <thead>
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </thead>
+    </xsl:template>
+    
+    <xsl:template match="tbody" mode="md2doc:transform">
+        <tbody>
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </tbody>
+    </xsl:template>
+    
+    <xsl:template match="tfoot" mode="md2doc:transform">
+        <tfoot>
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </tfoot>
+    </xsl:template>
+    
+    <xsl:template match="caption" mode="md2doc:transform">
+        <caption>
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </caption>
+    </xsl:template>
+    
+    <xsl:template match="tr" mode="md2doc:transform">
+        <tr>
+            <xsl:for-each select="th">
+                <th>
+                    <xsl:apply-templates mode="md2doc:transform"/>
+                </th>
+            </xsl:for-each>
+            <xsl:for-each select="td">
+                <td>
+                    <xsl:apply-templates mode="md2doc:transform"/>
+                </td>
+            </xsl:for-each>
+        </tr>
+    </xsl:template>
+    
+    <!--Definition list transform-->
+    <xsl:template match="dl" mode="group">
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
+    </xsl:template>
+    
+    <xsl:template match="dl" mode="md2doc:transform">
+        <variablelist>
+            <varlistentry>
+                <xsl:for-each select="dt">
+                    <term>
+                        <xsl:apply-templates mode="md2doc:transform"/>
+                    </term>
+                </xsl:for-each>
+                <xsl:for-each select="dd">
+                    <listitem>
+                        <para><xsl:apply-templates mode="md2doc:transform"/></para>
+                    </listitem>
+                </xsl:for-each>
+            </varlistentry>
+        </variablelist>
+    </xsl:template>
+    
+    <!--Inline transform-->
+    
+    <!--<xsl:template match="del" mode="group">
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
+    </xsl:template>
+    
+    <xsl:template match="del" mode="md2doc:transform">
+        
+    </xsl:template>-->
+    
+    <!--Semantically unsignificant html elements-->
+    <xsl:template match="b|i|del" mode="md2doc:transform">
+        <xsl:apply-templates mode="md2doc:transform"/>
+    </xsl:template>
+    
+    <!--<xsl:template match="node()|@*" name="identity" mode="#all">
         <xsl:copy>
             <xsl:apply-templates select="node()|@*" mode="#current"/>
         </xsl:copy>
-    </xsl:template>
+    </xsl:template>-->
     
 </xsl:stylesheet>
