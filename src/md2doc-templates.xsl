@@ -29,14 +29,14 @@
                         ">
                         <title><xsl:value-of select="$root-element"/></title>
                     </xsl:if>
-                    <xsl:call-template name="headline-grouping">
+                    <xsl:call-template name="md2doc:headline-grouping">
                         <xsl:with-param name="headline-element" select="$headline-element"/>
                         <xsl:with-param name="root-element" select="$root-element"/>
                     </xsl:call-template>
                 </xsl:element>    
             </xsl:when>
             <xsl:otherwise>
-                <xsl:call-template name="headline-grouping">
+                <xsl:call-template name="md2doc:headline-grouping">
                     <xsl:with-param name="headline-element" select="$headline-element"/>
                     <xsl:with-param name="root-element" select="$root-element"/>
                 </xsl:call-template>
@@ -44,7 +44,7 @@
         </xsl:choose>
     </xsl:template>
     
-    <xsl:template name="headline-grouping">
+    <xsl:template name="md2doc:headline-grouping">
         <xsl:param name="headline-element"/>
         <xsl:param name="root-element"/>
         <xsl:for-each-group select="*" 
@@ -55,7 +55,7 @@
             h5[not(preceding-sibling::h4)]|
             h6[not(preceding-sibling::h5)]
             ">                    
-            <xsl:apply-templates select="." mode="group">
+            <xsl:apply-templates select="." mode="md2doc:group">
                 <xsl:with-param name="headline-element" select="$headline-element"/>
                 <xsl:with-param name="root-element" select="$root-element"/>
             </xsl:apply-templates>
@@ -63,7 +63,7 @@
         </xsl:for-each-group>
     </xsl:template>
     
-    <xsl:template match="h1|h2|h3|h4|h5|h6" mode="group">
+    <xsl:template match="h1|h2|h3|h4|h5|h6" mode="md2doc:group">
         <xsl:param name="headline-element"/>
         <xsl:param name="root-element"/>
         <xsl:variable name="this" select="name()"/>
@@ -79,15 +79,15 @@
                     <xsl:namespace name="xl">http://www.w3.org/1999/xlink</xsl:namespace>  
                 </xsl:if>             
             </xsl:if>
-            <title><xsl:apply-templates select="node()|@*" mode="md2doc:transform"/></title>
+            <title><xsl:apply-templates select="." mode="md2doc:transform"/></title>
             <xsl:for-each-group select="current-group() except ." group-starting-with="*[name() = $next]">
-                <xsl:apply-templates select="." mode="group"/>
+                <xsl:apply-templates select="." mode="md2doc:group"/>
                 <!--<xsl:message>hX rule: <xsl:copy-of select="."/></xsl:message>-->
             </xsl:for-each-group>
         </xsl:element>
     </xsl:template> 
     
-    <xsl:template match="p" mode="group">
+    <xsl:template match="p" mode="md2doc:group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
         <!--        <xsl:message select="'Rule * group mode: ', current-group()"/>-->
     </xsl:template>
@@ -97,7 +97,7 @@
         <!--        <xsl:message select="'Rule p no mode: ', ."/>-->
     </xsl:template>
     
-    <xsl:template match="blockquote" mode="group">
+    <xsl:template match="blockquote" mode="md2doc:group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
@@ -111,7 +111,7 @@
         <title><xsl:apply-templates mode="md2doc:transform"/></title>
     </xsl:template>
     
-    <xsl:template match="ul" mode="group">
+    <xsl:template match="ul" mode="md2doc:group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
@@ -121,7 +121,7 @@
         </itemizedlist>
     </xsl:template>
     
-    <xsl:template match="ol" mode="group">
+    <xsl:template match="ol" mode="md2doc:group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
@@ -148,7 +148,7 @@
         <xsl:apply-templates mode="md2doc:transform"/>
     </xsl:template>
     
-    <xsl:template match="pre" mode="group">
+    <xsl:template match="pre" mode="md2doc:group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
@@ -164,13 +164,13 @@
         </programlisting>
     </xsl:template>
     
-    <xsl:template match="hr" mode="group">
+    <xsl:template match="hr" mode="md2doc:group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
     <xsl:template match="hr" mode="md2doc:transform"/>
     
-    <xsl:template match="textarea" mode="group">
+    <xsl:template match="textarea" mode="md2doc:group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>      
     </xsl:template>
     
@@ -187,7 +187,7 @@
         <xsl:value-of select="text()" disable-output-escaping="yes"/>      
     </xsl:template>-->
     
-    <xsl:template match="code" mode="md2doc:transform">
+    <xsl:template match="code|samp" mode="md2doc:transform">
         <computeroutput>
             <xsl:value-of select="." disable-output-escaping="yes"/>
         </computeroutput>
@@ -223,17 +223,45 @@
     
     <!--HTML TEMPLATES-->
     
-    <!--Semantically unimportant block elements-->
-    <xsl:template match="div|header|section|article|aside|figure" mode="group">
-        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
+    <xsl:template match="address|article|aside|body|button|div|
+        figure|fieldset|footer|form|header|map|nav|object|section|
+        video|script|noscript|iframe" mode="md2doc:group">
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/> 
+    </xsl:template>
+
+    <xsl:template match="article|aside|body|button|div|
+        figure|fieldset|footer|form|header|map|nav|object|section|
+        script|noscript|iframe" mode="md2doc:transform">
+        <para><xsl:value-of select="node()|@*"/></para>
     </xsl:template>
     
-    <xsl:template match="div" mode="md2doc:transform">
-        <xsl:apply-templates select="node()|@*" mode="md2doc:transform"/>
+    <xsl:template match="address" mode="md2doc:transform">
+        <address>
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </address>
+    </xsl:template>
+    
+    <xsl:template match="video" mode="md2doc:transform">
+        <mediaobject>
+            <videobject>
+                <videodata fileref="{@src}"/>
+            </videobject>
+            <textobject>
+                <para><xsl:value-of select="text()"/></para>
+            </textobject>
+        </mediaobject>
+    </xsl:template>
+    
+    <xsl:template match="embed[starts-with(@type,'video')]" mode="md2doc:transform">
+        <mediaobject>
+            <videobject>
+                <videodata fileref="{@src}"/>
+            </videobject>
+        </mediaobject>
     </xsl:template>
     
     <!--Table transform-->   
-    <xsl:template match="table" mode="group">
+    <xsl:template match="table" mode="md2doc:group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
@@ -292,7 +320,7 @@
     </xsl:template>
     
     <!--Definition list transform-->
-    <xsl:template match="dl" mode="group">
+    <xsl:template match="dl" mode="md2doc:group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
     </xsl:template>
     
@@ -313,19 +341,51 @@
         </variablelist>
     </xsl:template>
     
-    <!--Inline transform-->
-    
-    <!--<xsl:template match="del" mode="group">
-        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
+    <!--HTML inline elements-->
+    <xsl:template match="b|i|del|ins|span|small|dfn|object|textarea|script|button|label" mode="md2doc:transform">
+        <xsl:apply-templates mode="md2doc:transform"/>
     </xsl:template>
     
-    <xsl:template match="del" mode="md2doc:transform">
-        
-    </xsl:template>-->
+    <xsl:template match="abbr" mode="md2doc:transform">
+        <abbrev>
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </abbrev>
+    </xsl:template>
     
-    <!--Semantically unsignificant html elements-->
-    <xsl:template match="b|i|del" mode="md2doc:transform">
-        <xsl:apply-templates mode="md2doc:transform"/>
+    <xsl:template match="cite" mode="md2doc:transform">
+        <citation>
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </citation>
+    </xsl:template>
+    
+    <xsl:template match="kbd" mode="md2doc:transform">
+        <keycap>
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </keycap>
+    </xsl:template>
+    
+    <xsl:template match="var" mode="md2doc:transform">
+        <varname>
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </varname>
+    </xsl:template>
+    
+    <xsl:template match="q" mode="md2doc:transform">
+        <quote>
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </quote>
+    </xsl:template>
+    
+    <xsl:template match="sub" mode="md2doc:transform">
+        <subscript>
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </subscript>
+    </xsl:template>
+    
+    <xsl:template match="sup" mode="md2doc:transform">
+        <superscript>
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </superscript>
     </xsl:template>
     
     <!--<xsl:template match="node()|@*" name="identity" mode="#all">
