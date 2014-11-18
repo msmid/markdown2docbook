@@ -43,9 +43,9 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
     
     If you don't want to use root (division-level) element, leave it blank. For example:  
     `md2doc:convert($input, 'chapter', '')`  
-    **WARNING** This usage does not return well-formed document!
+    **WARNING** This usage may not return well-formed document!
     
-    If you leave second and third argument blank, eg. `md2doc:convert($input, '','')`, headline grouping will use sect1-6 and no        division and no component elements are used. This also does not produce well-formed document.
+    If you leave second and third argument blank, eg. `md2doc:convert($input, '','')`, headline grouping will use sect1-6 and no        division and no component elements are used. This also may not produce well-formed document.
 
   * **md2doc:read-file(xs:string $uri, xs:string $encoding)**  
     Attempts to read a file on path defined by $uri. If file can be located and has correct enconding as supplied by second      argument, function returns content of the file as a string. Otherwise, it shows error message. You can use this to supply     input for convert() functions.
