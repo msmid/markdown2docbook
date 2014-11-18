@@ -102,8 +102,8 @@ Using root and headline parameters
 
      md2doc:convert($input, $root-element, $headline-element)
 
-  Proper use of this stylesheet requires knowledge about your Markdown text. And also how output should look like. The most  
-  essential things are headlines. Few rules:
+Proper use of this stylesheet requires knowledge about your Markdown text. And also how output should look like.  
+The most essential are headlines. Few rules:
   
   1. Headlines are always grouping. That means, it will pull together all content until another headline occurs.  
      Default headline element is `<sect1-6>`. This can be changed with headline-element.  
