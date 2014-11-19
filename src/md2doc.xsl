@@ -32,6 +32,9 @@
     <xsl:param name="encoding-file " as="xs:string" select="'UTF-8'"/>
     <xsl:param name="url-savepath" as="xs:string" select="''"/>
 
+    <!--THIS SHEET IS ONLY FOR TESTING PURPOSES, IT CONTAINS INITIAL TEMPLATES-->
+    <!--<xsl:include href="md2doc-test.xsl"/>-->
+
     <xsl:template name="main">
         <xsl:param name="input" as="xs:string" select="$input"/>
         <xsl:param name="encoding-file" as="xs:string" select="$encoding-file"/>
@@ -52,6 +55,7 @@
             </xsl:choose>
         </xsl:result-document>
     </xsl:template>
+
 
     <xsl:template name="get-html">
         <xsl:param name="input" as="xs:string" select="$input"/>
@@ -80,7 +84,6 @@
         </xsl:result-document>
     </xsl:template>
 
-    <!--Testing template, will be removed in final version-->
     <xsl:template name="test">
         <xsl:param name="encoding-file" as="xs:string" select="'utf-8'"/>
         <xsl:param name="input" as="xs:string" select="'../test/in/test-frag.md'"/>
@@ -119,28 +122,16 @@
             </xsl:choose>
         </xsl:result-document>
         
-        <xsl:result-document href="../test/out/output2.xml" format="xhtml" exclude-result-prefixes="doc">
-            <html>
-                <head>
-                    <title></title>
-                    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-                </head>
-                <body>
-                    <xsl:choose>
-                        <xsl:when test="$encoding-file eq ''">
-                            <xsl:sequence select="d:htmlparse($input)"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:variable name="input"
-                                select="md2doc:read-file($input, $encoding-file)"/>
-                            <xsl:sequence select="d:htmlparse($input,'',true())"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </body>
-            </html>
-        </xsl:result-document>
+        <!--<xsl:result-document href="../test/out/output2.xml" format="xhtml">
+            <xsl:sequence select="d:htmlparse($input)"/>
+        </xsl:result-document>-->
         
     </xsl:template>
+    
+    
+    <xsl:variable name="md2doc:block-html" 
+        select="string('article|aside|body|blockquote|button|canvas|div|dl|embed|figure|fieldset|footer|form|h[1-6]|header|map|nav|object|ol|p|pre|section|table|ul|video|script|noscript|iframe|math|ins')"/>
+    
 
 
 </xsl:transform>
