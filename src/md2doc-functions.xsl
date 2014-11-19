@@ -1,29 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xsl:stylesheet [
+    <!ENTITY LF "<xsl:text>&#xA;</xsl:text>">
+]>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:md2doc="http://www.markdown2docbook.com/ns/md2doc"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:sax="http://saxon.sf.net/"
     xmlns:d="data:,dpc"
-    exclude-result-prefixes="xs d md2doc"
+    exclude-result-prefixes="xs d md2doc html sax"
     version="2.0">
-    
-    <!--
-        FUNCTION LIBRARY stylesheet
-        
-        Markdown Parser in XSLT2 Copyright 2014 Martin Šmíd
-        This code is under MIT licence, see more at https://github.com/MSmid/markdown2docbook
-    -->
     
     <xsl:import href="md2doc-templates.xsl"/>
     <xsl:import href="htmlparse.xsl"/>
     
-    <!--
-    ! Main converting function. Transform input string into Docbook.
-    !
-    ! @param $input the string to be parsed
-    ! @param $root-element specifies if root element is needed
-    ! @param $headline-element specifies if h1 elements should be wrapped in passed element
-    ! @return generated DocBook document
-    -->
+    <!--FUNCTIONS LIBRARY-->
+    
     <xsl:function name="md2doc:convert">
         <xsl:param name="input" as="xs:string"/>
         <xsl:param name="root-element" as="xs:string"/>
@@ -41,14 +33,26 @@
         
     </xsl:function>
     
-    <!--
-    ! Function responsible for transforming HTML into DocBook.
-    !
-    ! @param $html-input html document to be transformed
-    ! @param $root-element specifies if root element is needed
-    ! @param $headline-element specifies if h1 elements should be wrapped in passed element
-    ! @return generated DocBook document
-    -->
+    <xsl:function name="md2doc:convert">
+        <xsl:param name="uri-file" as="xs:string"/>
+        <xsl:param name="encoding" as="xs:string"/>
+        <xsl:param name="root-element" as="xs:string"/>
+        <xsl:param name="headline-element" as="xs:string"/>     
+        
+        <xsl:variable name="input" select="md2doc:read-file($uri-file, $encoding)"/>
+        
+        <xsl:variable name="text-united" select="md2doc:unify-endlines($input)"/>
+        <xsl:variable name="text-stripped-blanklines" select="md2doc:strip-blanklines($text-united)"/>
+        <xsl:variable name="text-stripped-refs" select="md2doc:strip-references($text-stripped-blanklines)"/>
+        
+        <xsl:variable name="refs" select="md2doc:save-references($text-stripped-blanklines)"/>
+        
+        <xsl:variable name="html" select="md2doc:run-block($text-stripped-refs, $refs)"/>
+        
+        <xsl:sequence select="md2doc:transform-to-doc($html, $root-element, $headline-element)"/>
+        
+    </xsl:function>
+    
     <xsl:function name="md2doc:transform-to-doc">
         <xsl:param name="html-input"/>
         <xsl:param name="root-element"/>
@@ -66,13 +70,8 @@
         </xsl:apply-templates>
     </xsl:function>
     
-    <!--
-    ! Simple function that handles reading from the file. Return error message if something gone wrong.
-    !
-    ! @param $uri location of the input file
-    ! @param $encoding of the input file
-    ! @return string content of the file
-    -->
+    <!--PARSING FUNCTIONS-->
+    
     <xsl:function name="md2doc:read-file">
         <xsl:param name="uri" as="xs:string"/>
         <xsl:param name="encoding" as="xs:string"/>
@@ -89,13 +88,6 @@
         </xsl:choose>
     </xsl:function>
     
-    <!--
-    ! Unify endlines into single newline feed character for easier parsing.
-    ! Also adding two newlines at the start and the end of text.
-    !
-    ! @param $text to be unified
-    ! @return text prepared for parsing
-    -->
     <xsl:function name="md2doc:unify-endlines">
         <xsl:param name="text" as="xs:string"/>
         
@@ -104,31 +96,30 @@
         <xsl:value-of select="concat('&#xA;&#xA;', $output, '&#xA;&#xA;')"/>
     </xsl:function>
     
-    <!--
-    ! Lines which contain only whitespace are stripped, leaving only newline char.
-    ! We want to know, where are "blanklines" but we don't need any spaces, tabs etc.
-    !
-    ! @param $text to be stripped
-    ! @return text prepared for parsing
-    -->
     <xsl:function name="md2doc:strip-blanklines">
         <xsl:param name="text" as="xs:string"/>
         
         <xsl:analyze-string select="$text" regex="^[ \t]+?$" flags="m">
             <xsl:matching-substring/>
             <xsl:non-matching-substring>
-                <xsl:value-of select="."/>
+                <xsl:sequence select="."/>
             </xsl:non-matching-substring>
         </xsl:analyze-string>
     </xsl:function>
     
-    <!--
-    ! Before any other action, parser needs to find and save references from text.
-    ! They are used for link and images (as href, respectively src attributes). 
-    !
-    ! @param $input to find and save references
-    ! @return references representation
-    -->
+    <xsl:function name="md2doc:strip-references">
+        <xsl:param name="input" as="xs:string*"/>
+        
+        <xsl:variable name="text" select="string-join($input,'')"/>
+        <xsl:analyze-string select="$text" 
+            regex="^[ ]{{0,3}}\[(.+)\]:[ \t]*\n?[ \t]*&lt;?(\S+?)&gt;?[ \t]*\n?[ \t]*(?:(?&lt;=\s)[&quot;(](.+?)[&quot;)][ \t]*)?(?:\n+|\Z)" flags="m!">
+            <xsl:matching-substring/>
+            <xsl:non-matching-substring>
+                <xsl:sequence select="."/>
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>
+    </xsl:function>
+    
     <xsl:function name="md2doc:save-references">
         <xsl:param name="input" as="xs:string*"/>
         
@@ -148,34 +139,6 @@
         </references>
     </xsl:function>
     
-    <!--
-    ! References aren't displayed in final document, so we need to strip them, before
-    ! we start parsing.
-    !
-    ! @param $input where references will be stripped
-    ! @return text prepared for parsing
-    -->
-    <xsl:function name="md2doc:strip-references">
-        <xsl:param name="input" as="xs:string*"/>
-        
-        <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:analyze-string select="$text" 
-            regex="^[ ]{{0,3}}\[(.+)\]:[ \t]*\n?[ \t]*&lt;?(\S+?)&gt;?[ \t]*\n?[ \t]*(?:(?&lt;=\s)[&quot;(](.+?)[&quot;)][ \t]*)?(?:\n+|\Z)" flags="m!">
-            <xsl:matching-substring/>
-            <xsl:non-matching-substring>
-                <xsl:sequence select="."/>
-            </xsl:non-matching-substring>
-        </xsl:analyze-string>
-    </xsl:function>
-    
-    <!--
-    ! Initializing descent recursive regexp parsing logic. Starting with block elements,
-    ! then proceeding on inline elements.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:run-block">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -184,15 +147,7 @@
         <xsl:variable name="result" select="md2doc:parse-codeblocks($text, $refs)"/>
         <xsl:sequence select="$result"/>
     </xsl:function>
-    
-    <!--
-    ! Parse markdown codeblocks and return html representation. This function is invoked first.
-    ! Left string is supplied into next function.
-    !
-    ! @param $input to be parsed 
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
+      
     <xsl:function name="md2doc:parse-codeblocks">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -212,13 +167,6 @@
         </xsl:analyze-string>
     </xsl:function>
     
-    <!--
-    ! Parse ATX and setext style headers. Unparsed string is supplied into next function.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:parse-headers">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -255,13 +203,6 @@
         </xsl:analyze-string>
     </xsl:function>   
     
-    <!--
-    ! Parse three types of rulers separately. Unparsed string is supplied into next function.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:parse-rulers">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -292,14 +233,6 @@
         </xsl:analyze-string>
     </xsl:function>
     
-    <!--
-    ! Finds list block and decide if it is <ul> or <ol>. Then calls function for processing list items.
-    ! Unparsed string is supplied into next function.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:parse-lists">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -329,18 +262,6 @@
         </xsl:analyze-string>
     </xsl:function>
     
-    <!--
-    ! Dead-end function, which is used for parsing list items. It receives whole list block, which
-    ! cuts into list items and its sub-list items (list items are found with given indent). List items with
-    ! same indent are considered as siblings, but list items with indent smaller or bigger are considered as their
-    ! children and they will be turned into new list block. Other markdown will be parsed accordingly to their markup.
-    ! List items and other elements are stripped, trimmed, chopped and sent recursively to run-block function.
-    !
-    ! @param $input to be parsed
-    ! @param $indent of list item. 
-    ! @param $refs represents saved references
-    ! @return parsed markdown in <li> elements
-    -->
     <xsl:function name="md2doc:parse-list-items">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="indent" as="xs:integer"/>
@@ -384,14 +305,6 @@
         </xsl:analyze-string>
     </xsl:function>
     
-    <!--
-    ! Parse blockquotes. They are trimmed and "inner" text is sent into run-block() for recursive parsing.
-    ! Unparsed string is supplied into next function.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:parse-blockquotes">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -410,19 +323,6 @@
         </xsl:analyze-string>
     </xsl:function>
     
-    <!--
-    ! Function, that handle and parse HTML elements allowed in Markdown document. First we need to identify HTML "stuff":
-    ! comments, regular elements and self-closing tags. After that, we call external function d:htmlparse from 
-    ! David Carlisle's stylesheet to build HTML nodes from this "literal" HTML.
-    ! Note: function use whitelist of accepted HTML for two reasons:
-    ! 1) Regexp is way more faster with finding <div> than <\w+>
-    ! 2) Gruber's parser also accepts whitelist HTML
-    ! I added some more tags, but I still sticks to the whitelist, because I dont want to slow down regexp.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed literal HTML into HTML document
-    -->
     <xsl:function name="md2doc:parse-block-html">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -457,7 +357,7 @@
                                 <!--<xsl:message select="."/>-->
                             </xsl:matching-substring>
                             <xsl:non-matching-substring>
-                                <!--Dont forget on self-closing tags-->
+                                <!--Dont forget on <hr /> and <br />-->
                                 <xsl:analyze-string select="." 
                                     regex="(?&lt;=\n\n)([ ]{{0,3}}&lt;(embed|hr|br|img)\b([^&lt;&gt;])*?/?&gt;[ \t]*(?=\n{{2,}}))" flags="m!">
                                     <xsl:matching-substring>
@@ -477,15 +377,6 @@
         </xsl:analyze-string>
     </xsl:function>
     
-    <!--
-    ! Last block-level parsing function. It splits input by newlines, decides which ones will be wrapped
-    ! in <p> (list items can be without <p> if they aren't separated by blankline) and sends into run-inline
-    ! function.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:parse-paragraphs">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -537,13 +428,6 @@
         </xsl:for-each>
     </xsl:function>
     
-    <!--
-    ! This function invokes parsing of inline markdown in similar fashion as run-block().
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:run-inline">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -551,13 +435,6 @@
         <xsl:sequence select="md2doc:parse-codespans($text, $refs)"/>
     </xsl:function>
     
-    <!--
-    ! Like parse-codeblocks(), we have to parse inline codespans first.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:parse-codespans">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -581,16 +458,6 @@
         </xsl:analyze-string>
     </xsl:function>
     
-    <!--
-    ! Inline HTML markup needs to be parsed. Gruber's parser leaves this alone, so it becomes source of bugs
-    ! (for example: *<q>quote*</q> produces <em><q>quote</em></q>).
-    ! To avoid this behaviour I need to parse them. There is one difference with Gruber's parser:
-    ! You will not get Markdown inside inline HTML parsed!
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:parse-inline-html">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -598,14 +465,10 @@
         <!--List of accepted html elements-->
         <xsl:variable name="inline-html" select="string('i|b|del|ins|abbr|span|small|cite|dfn|kbd|samp|var|object|q|script|button|label|sub|sup|textarea')"/>
         
-        <xsl:analyze-string select="$text" regex="(&lt;({$inline-html})\b((.*\n)*?.*)&lt;/\2&gt;)" flags="!">
-<!--            (&lt;({$inline-html})\b(.*\n)*?.*&lt;/\2&gt;)-->
+        <xsl:analyze-string select="$text" regex="(&lt;({$inline-html})\b(.*\n)*?.*&lt;/\2&gt;)" flags="!">
             <xsl:matching-substring>
 <!--                <textarea><xsl:sequence select="md2doc:parse-codespans(.,$refs)"/></textarea>-->
-<!--                <xsl:sequence select="d:htmlparse(.,'',true())"/>-->
-                <xsl:element name="{regex-group(2)}">
-                    <xsl:sequence select="md2doc:run-inline(replace(regex-group(3),'>',''),$refs)"/>
-                </xsl:element>
+                <xsl:sequence select="d:htmlparse(.,'',true())"/>
             </xsl:matching-substring>
             <xsl:non-matching-substring>
                 <xsl:sequence select="md2doc:parse-spans(.,$refs)"/>
@@ -613,13 +476,6 @@
         </xsl:analyze-string>      
     </xsl:function>
     
-    <!--
-    ! Parsing of strong and em markdown markup.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:parse-spans">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -645,14 +501,6 @@
         </xsl:analyze-string>
     </xsl:function>
     
-    <!--
-    ! Parsing of images, both inline and reference styles. For reference style, function looks up in $refs
-    ! and create <img> by id.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:parse-images">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -694,14 +542,6 @@
         </xsl:analyze-string>
     </xsl:function>
     
-    <!--
-    ! Parsing of anchors, both inline and reference styles. For reference style, function looks up in $refs
-    ! and create <a> by id.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:parse-anchors">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -750,13 +590,6 @@
         </xsl:analyze-string>
     </xsl:function>
     
-    <!--
-    ! Parsing of links (eg. <http://www.markdown2docbook.com> ). They have to be in enclosed in angle brackets.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:parse-automatic-links">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -775,13 +608,6 @@
         </xsl:analyze-string>
     </xsl:function>
     
-    <!--
-    ! Function, that unespaces special characters, whose are meaningful both in HTML and Markdown.
-    !
-    ! @param $input to be parsed
-    ! @param $refs represents saved references
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:parse-special-chars">
         <xsl:param name="input" as="xs:string*"/>
         <xsl:param name="refs"/>
@@ -791,13 +617,6 @@
         <xsl:sequence select="replace($text,$chars,'','!')"/>
     </xsl:function>
     
-    <!--
-    ! This serves (as name implied) to get HTML document out of Markdown. If user wants to get only HTML,
-    ! he uses this function instead of convert() which returns DocBook document.
-    !
-    ! @param $input to be parsed
-    ! @return parsed markdown into HTML document
-    -->
     <xsl:function name="md2doc:get-html">
         <xsl:param name="input" as="xs:string"/>
         <xsl:variable name="text-united" select="md2doc:unify-endlines($input)"/>
@@ -809,11 +628,8 @@
         <xsl:sequence select="md2doc:run-block($text-stripped-refs, $refs)"/>
     </xsl:function>
     
-    <!--
-    ! Simple function which displays information about user's XSLT processor.
-    !
-    ! @return info about user's XSLT processor
-    -->
+    <!--OTHER FUNCTIONS-->
+    
     <xsl:function name="md2doc:get-processor-info">
         <xsl:variable name="output">
             <xsl:value-of select="'&#xA;XSLT ',system-property('xsl:version')" />
@@ -825,21 +641,25 @@
         <xsl:sequence select="$output"/>
     </xsl:function>
     
-    <!--
-    ! Function, which outputs messages to help determine what is going on. 
-    !
-    ! @param $number of the message
-    ! @param $type of the message
-    ! @return message
-    -->
+    <xsl:function name="md2doc:print-disclaimer">
+        <xsl:comment>
+Generated using md2doc.xsl by Martin Smid ©2014
+on <xsl:value-of select="current-dateTime()"/>
+------------------------<xsl:value-of select="md2doc:get-processor-info()"/>
+        </xsl:comment>&LF;
+    </xsl:function>
+    
     <xsl:function name="md2doc:alert">
         <xsl:param name="number" as="xs:integer"/>
         <xsl:param name="type" as="xs:string"/>
         <xsl:variable name="messages">
             <message type="error" no="1">MD2Doc: Error with input file: incorrect encoding or missing file</message>
             <message type="error" no="2">MD2Doc: Non matching: </message>
+            
         </xsl:variable>
         <xsl:sequence select="$messages/message[@type=$type][@no=$number]/text()"/>
     </xsl:function>
       
+    
+    
 </xsl:stylesheet>
