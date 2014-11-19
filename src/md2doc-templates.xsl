@@ -106,7 +106,7 @@
             )
             else concat('sect',replace($this,'h',''))
             }">
-            <xsl:if test="$root-element eq ''">
+            <xsl:if test="$root-element eq '' and $this eq 'h1'">
                 <xsl:attribute name="version" select="5"/>
                 <xsl:if test="boolean(/root//*[a])">
                     <xsl:namespace name="xl">http://www.w3.org/1999/xlink</xsl:namespace>  
@@ -116,9 +116,11 @@
             <xsl:for-each-group select="current-group() except ." group-starting-with="*[name() = $next]">
                 <xsl:apply-templates select="." mode="md2doc:group">
                     <xsl:with-param name="headline-element" select="$headline-element"/>
+                    <xsl:with-param name="root-element" select="$root-element"/>
                 </xsl:apply-templates>
                 <!--<xsl:message>hX rule: <xsl:copy-of select="."/></xsl:message>-->
             </xsl:for-each-group>
+            <xsl:message select="'root: ',$root-element"/>
         </xsl:element>
     </xsl:template> 
     
