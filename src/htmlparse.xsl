@@ -3,6 +3,7 @@
    xmlns:d="data:,dpc"
    xmlns:xs="http://www.w3.org/2001/XMLSchema"
    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+   xmlns:md2doc="http://www.markdown2docbook.com/ns/md2doc"
    exclude-result-prefixes="d xs">
 
 <!-- 
@@ -219,6 +220,7 @@ Typical use:
     </xsl:matching-substring>
     <xsl:non-matching-substring>
       <xsl:value-of select="."/>
+<!--      <xsl:message select="."/>-->
     </xsl:non-matching-substring>
   </xsl:analyze-string>
   </xsl:variable>
