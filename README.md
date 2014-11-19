@@ -85,7 +85,7 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
 
 ### 3. Running stylesheet over DocBook XML document with Markdown snippets ###
 
-  The best way how to transform those snippets is to import `md2doc.xsl` into your stylesheet, add namespace, write a template to match Markdown snippet and use it as input in `md2doc:convert()` function. Example:
+The best way how to transform those snippets is to import `md2doc.xsl` into your stylesheet, add namespace, write a template to match Markdown snippet or CDATA section and use it as input in `md2doc:convert()` function. Example:
   
     <xsl:template match="programlisting[@language=markdown]">
        <xsl:copy-of select="md2doc:convert(.,'book','chapter')"/>
