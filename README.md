@@ -63,28 +63,19 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
   * **main**  
     This is only template, which produces result document.
   
-  * **get-html**
+  * **get-html**  
     Same as `md2doc:get-html()` function, but template.
 
-  * **convert**
+  * **convert**  
      Same as `md2doc:convert()` function, but template.
  
 ### 2. Using stylesheet to convert Markdown file into DocBook file ###
 
- Because you can't run XSL over non-XML files, you have to run XSLT processor with initial template. That template is called `main`
-  
- **main**  
-   @param input  
-   @param encoding  
-   @param root-element  
-   @param headline-element  
-   @param savepath   
-
-  Main template, which transforms input into result document and save it on path given as parameter. Root and                  headline-element works exactly the same as written above. Savepath defines location and name of the file to be saved. 
+ Because you can't run XSL over non-XML files, you have to run XSLT processor with initial template. That template is called `main` Main template, which transforms input into result document and save it on path given as parameter. Root and headline-element works exactly the same as written above. Savepath defines location and name of the file to be saved. 
 
   Running from command line
   
-     java  -jar dir/saxon9he.jar it main input-uri=input.md encoding=utf-8 root-element=book headline-element=chapter  
+     java  -jar dir/saxon9he.jar it main input=input.md encoding=utf-8 root-element=book headline-element=chapter  
      savepath=output.xml 
 
   XSL editors should allow you to set options and parameters in transformation scenarios.
@@ -111,7 +102,7 @@ The most essential are headlines. Few rules:
   2. Root-element is used for explicit root usage. It is whole document wrapper. You can achieve this also without  
      root-element: having exactly one headline of given level and zero or more headlines of higher level in document.
   
-  ### Scenarios
+### Scenarios
 
   1. I have Markdown snippet, with no headlines
      Using `root` argument will cause all markdown snippet to be wrapped.  
