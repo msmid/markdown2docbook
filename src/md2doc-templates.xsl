@@ -118,20 +118,16 @@
                     <xsl:with-param name="headline-element" select="$headline-element"/>
                     <xsl:with-param name="root-element" select="$root-element"/>
                 </xsl:apply-templates>
-                <!--<xsl:message>hX rule: <xsl:copy-of select="."/></xsl:message>-->
             </xsl:for-each-group>
-            <xsl:message select="'root: ',$root-element"/>
         </xsl:element>
     </xsl:template> 
     
     <xsl:template match="p" mode="md2doc:group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
-        <!--        <xsl:message select="'Rule * group mode: ', current-group()"/>-->
     </xsl:template>
     
     <xsl:template match="p" mode="md2doc:transform">
         <para><xsl:apply-templates select="node()|@*" mode="md2doc:transform"/></para>
-        <!--        <xsl:message select="'Rule p no mode: ', ."/>-->
     </xsl:template>
     
     <xsl:template match="blockquote" mode="md2doc:group">
@@ -243,11 +239,15 @@
             <xsl:attribute name="xl:href">
                 <xsl:value-of select="@href"/>
             </xsl:attribute>
-            <xsl:if test="@title = ''">
+            <xsl:if test="@title != ''">
                 <alt><xsl:value-of select="@title"/></alt>
             </xsl:if>         
             <xsl:apply-templates select="node()" mode="md2doc:transform"/>
         </link>
+    </xsl:template>
+    
+    <xsl:template match="br" mode="md2doc:transform">
+        <xsl:text> </xsl:text>
     </xsl:template>
     
     <xsl:template match="address|article|aside|body|button|div|

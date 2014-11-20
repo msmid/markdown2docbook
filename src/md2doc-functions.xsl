@@ -506,15 +506,15 @@
         <xsl:for-each select="$split">
             <xsl:choose>
                 <xsl:when test="matches(.,'^$')">
-                    
+                    <!--Omitting blanklines-->
                 </xsl:when>
                 <xsl:otherwise>
                     <xsl:choose>
                         <xsl:when test="matches(.,'\n$')">
-                            <xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),'([ ]|\n)+$',''), $refs)"/>
+                            <xsl:sequence select="md2doc:run-inline(replace(.,'^ +',''), $refs)"/>
                         </xsl:when>
                         <xsl:otherwise>
-                            <p><xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),'([ ]|\n)+$',''), $refs)"/></p>
+                            <p><xsl:sequence select="md2doc:run-inline(replace(.,'^ +',''), $refs)"/></p>
 <!--                            <paracontent><xsl:value-of select="."/></paracontent>-->
                         </xsl:otherwise>
                     </xsl:choose>
@@ -608,9 +608,31 @@
                 </xsl:element>
             </xsl:matching-substring>
             <xsl:non-matching-substring>
-                <xsl:sequence select="md2doc:parse-spans(.,$refs)"/>
+                <xsl:sequence select="md2doc:parse-hardbreaks(.,$refs)"/>
             </xsl:non-matching-substring>
         </xsl:analyze-string>      
+    </xsl:function>
+    
+    <!--
+    ! Parsing of hardbreaks, which are used for forcing linebreak.
+    !
+    ! @param $input to be parsed
+    ! @param $refs represents saved references
+    ! @return parsed markdown into HTML document
+    -->
+    <xsl:function name="md2doc:parse-hardbreaks">
+        <xsl:param name="input" as="xs:string*"/>
+        <xsl:param name="refs"/>
+        
+        <xsl:variable name="text" select="string-join($input,'')"/>
+        <xsl:analyze-string select="$text" regex="[ ]{{2}}\n" flags="">
+            <xsl:matching-substring>
+                <br />
+            </xsl:matching-substring>
+            <xsl:non-matching-substring>
+                <xsl:sequence select="md2doc:parse-spans(.,$refs)"/>
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>
     </xsl:function>
     
     <!--
