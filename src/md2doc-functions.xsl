@@ -603,27 +603,26 @@
         <xsl:variable name="text" select="string-join($input,'')"/>
         <!--List of accepted html elements-->
         <xsl:variable name="inline-html" select="string('a|i|b|del|ins|abbr|span|small|cite|mark|dfn|kbd|samp|span|var|object|q|script|button|label|sub|sup|textarea')"/>
-        
-        <xsl:analyze-string select="$text" regex="&lt;(embed|br|img)\b([^&lt;&gt;])*?/?&gt;" flags="!">
+        <xsl:analyze-string select="$text" regex="(&lt;({$inline-html})\b((.*\n)*?.*)&lt;/\2&gt;)" flags="!">
             <xsl:matching-substring>
                 <xsl:sequence select="d:htmlparse(.,'',true())"/>
+                <!--<xsl:element name="{regex-group(2)}">
+                        <xsl:sequence select="md2doc:run-inline(replace(regex-group(3),'>',''),$refs)"/>
+                    </xsl:element>-->
             </xsl:matching-substring>
             <xsl:non-matching-substring>
-                <xsl:analyze-string select="." regex="(&lt;({$inline-html})\b((.*\n)*?.*)&lt;/\2&gt;)" flags="!">
-                    <!--(&lt;({$inline-html})\b(.*\n)*?.*&lt;/\2&gt;)-->
+                <xsl:analyze-string select="." regex="&lt;(a|embed|br|img)\b([^&lt;&gt;])*?/?&gt;" flags="!">
                     <xsl:matching-substring>
-                        <!--<textarea><xsl:sequence select="md2doc:parse-codespans(.,$refs)"/></textarea>-->
-                        <!--<xsl:sequence select="d:htmlparse(.,'',true())"/>-->
-                        <xsl:element name="{regex-group(2)}">
-                            <xsl:sequence select="md2doc:run-inline(replace(regex-group(3),'>',''),$refs)"/>
-                        </xsl:element>
+                        <xsl:sequence select="d:htmlparse(.,'',true())"/>
                     </xsl:matching-substring>
                     <xsl:non-matching-substring>
                         <xsl:sequence select="md2doc:parse-hardbreaks(.,$refs)"/>
                     </xsl:non-matching-substring>
-                </xsl:analyze-string> 
+                </xsl:analyze-string>
             </xsl:non-matching-substring>
-        </xsl:analyze-string>
+        </xsl:analyze-string> 
+        
+        
     </xsl:function>
     
     <!--
