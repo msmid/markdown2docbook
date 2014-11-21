@@ -218,7 +218,7 @@
         </computeroutput>
     </xsl:template>
     
-    <xsl:template match="em|strong" mode="md2doc:transform">
+    <xsl:template match="em|strong|mark" mode="md2doc:transform">
         <emphasis>
             <xsl:apply-templates select="node()|@*" mode="md2doc:transform"/>
         </emphasis>
