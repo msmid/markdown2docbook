@@ -322,7 +322,7 @@
                     </xsl:analyze-string>
                 </xsl:variable>
                 <xsl:element name="{if (matches(.,'^[ ]*[*+-]','m')) then 'ul' else 'ol'}">
-                    <xsl:sequence select="md2doc:parse-list-items(., $indent, $refs)"/>
+                    <xsl:sequence select="md2doc:parse-list-items(md2doc:detab(.), $indent, $refs)"/>
                 </xsl:element>
                 <!--debug-->
                 <!--<obsahListu>&LF;<xsl:copy-of select="."/></obsahListu>
@@ -825,6 +825,31 @@
         <xsl:variable name="text" select="string-join($input,'')"/>
         <xsl:variable name="chars" select="'\\(?=[\\`*_{}\[\]()#+\-.!&gt;])'"/>
         <xsl:sequence select="replace($text,$chars,'','!')"/>
+    </xsl:function>
+    
+    <!--
+    ! Finds leading chars and tab, then counts how many spaces should replace the tab.
+    !
+    ! @param $text to be detabed
+    ! @return text with replaced tabs
+    -->
+    <xsl:function name="md2doc:detab">
+        <xsl:param name="text" as="xs:string"/>
+        
+        <xsl:analyze-string select="$text" regex="^(.*?)\t" flags="m">
+            <xsl:matching-substring>
+                <xsl:variable name="trim" select="string-length(regex-group(1))"/>
+                <xsl:variable name="detab" 
+                    select="if ($trim != 0) 
+                            then replace('    ', concat('^ {',$trim,'}'), '')
+                            else string('    ')"
+                />
+                <xsl:sequence select="replace(.,'\t',$detab)"/>
+            </xsl:matching-substring>
+            <xsl:non-matching-substring>
+                <xsl:value-of select="."/>
+            </xsl:non-matching-substring>
+        </xsl:analyze-string>
     </xsl:function>
     
     <!--

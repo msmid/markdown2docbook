@@ -94,7 +94,7 @@
     <!--Testing template, will be removed in final version-->
     <xsl:template name="test">
         <xsl:param name="encoding" as="xs:string" select="'utf-8'"/>
-        <xsl:param name="input" as="xs:string" select="'../test/in/test-frag.md'"/>
+        <xsl:param name="input" as="xs:string" select="'../test/in/stackoverflow.md'"/>
 
         <xsl:result-document href="../test/out/output.xml" format="xhtml" exclude-result-prefixes="doc">
             <!--<xsl:sequence select="md2doc:print-disclaimer()"/>-->
@@ -150,7 +150,7 @@
                 </body>
             </html>
         </xsl:result-document>
-        
+
     </xsl:template>
 
 
