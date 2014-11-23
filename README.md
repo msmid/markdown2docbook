@@ -20,8 +20,7 @@ Features
 --------
 
    * Markdown to Docbook 5 conversion
-   * Markdown to HTML conversion
-   * Outputs file or string
+   * Markdown implementation in XSLT 2.0
 
 Getting started
 ---------------
