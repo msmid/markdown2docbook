@@ -1,18 +1,18 @@
-Markdown to DocBook - md2doc.xsl
-================================
+Markdown to DocBook Converter
+=============================
 
-Conversion tool for transforming markdown formatted text files to valid DocBook documents. Project is based on XSLT 2.0 technology.
+Conversion tool for transforming markdown formatted text files to valid DocBook and HTML documents. Project is based on XSLT 2.0 technology.
 
 XSL is developed under Saxon XSLT processor. See below why
  
    * Better regex support than native XPath specification (using flag `!` for java regex)
    * PHP API (Saxon/C)
-   * Great performance
+   * Open-source
 
 For demo, online converter or more info, please visit  
 www.markdown2docbook.com
 
-For documentation, please visit:  
+For official documentation, please visit:  
 www.documentation.markdown2docbook.com
 
 
@@ -20,22 +20,25 @@ Features
 --------
 
    * Markdown to Docbook 5 conversion
-   * Markdown to HTML conversion
-   * Outputs file or string
+   * Markdown implementation in XSLT 2.0
+   * Supports original Markdown syntax
+
 
 Getting started
 ---------------
 
-Downloading the stylesheet is pretty much all you have to do. I assume you have editors/tools for running XSLT. 
-Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if you have free Home Edition or commercial EE respectively PE. It works on the whole family! 
+Downloading the stylesheets is pretty much all you have to do. I assume you have editors/tools for running XSLT. 
+Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if you have free Home Edition or commercial EE respectively PE. It works on the whole family! Let's look on intended usage scenarios.
 
 ### 1. Importing md2doc stylesheet into another stylesheet ###
       
-  Let's say you have your own xsl stylesheet and you want to use certain md2doc functions.
-  There is nothing easier. Use `<xsl:import>` element. Don't forget about namespace! Be sure to add md2doc URI                `http://www.markdown2docbook.com/ns/markdown2docbook` among other namespace declarations. Example:
+Let's say you have your own xsl stylesheet and you want to use certain md2doc functions.
+There is nothing easier. Use `<xsl:import>` element. Don't forget about namespace! Be sure to add md2doc URI                `http://www.markdown2docbook.com/ns/markdown2docbook` among other namespace declarations. Example:
 
     <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xmlns:md2doc="http://www.markdown2docbook.com/ns/md2doc"> ...
+         
+ Also make sure that all stylesheets (md2doc.xsl, md2doc-templates.xsl and md2doc-functions.xsl) are in same directory.
 
   **Now you can use following md2doc functions:**
      
@@ -64,7 +67,7 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
 **And also these templates**
 
   * **main**  
-    This is only template, which produces result document.
+    This template is intended to be used as initial template, when you need to run md2doc on its own with source markdown        file, which transforms into DocBook and outputs xml file.
   
   * **get-html**  
     Same as `md2doc:get-html()` function, but template.
@@ -74,7 +77,7 @@ Be sure you have Saxon processor version 9.5 and higher. It doesn't matter if yo
  
 ### 2. Using stylesheet to convert Markdown file into DocBook file ###
 
- Because you can't run XSL over non-XML files, you have to run XSLT processor with initial template. That template is called `main` Main template, which transforms input into result document and save it on path given as parameter. Root and headline-element works exactly the same as written above. Savepath defines location and name of the file to be saved. 
+Because you can't run XSL over non-XML files, you have to run XSLT processor with initial template. That template is called `main` Main template, which transforms input into result document and save it on path given as parameter. Root and headline-element works exactly the same as written above. Savepath defines location and name of the file to be saved. 
 
   Running from command line
   
@@ -91,36 +94,45 @@ The best way how to transform those snippets is to import `md2doc.xsl` into your
        <xsl:copy-of select="md2doc:convert(.,'book','chapter')"/>
     </xsl:template>
     
+`programlisting` is for example purposes only. Markdown doesn't has to be in such element. You can add into DocBook your own namespaced element which denotes Markdown text. But careful, on automatic escaping. If you insert some HTML into your Markdown, you have to use `CDATA` section.   
+    
 Using root and headline parameters 
 ----------------------------------
 
-     md2doc:convert($input, $root-element, $headline-element)
-
-Proper use of this stylesheet requires knowledge about your Markdown text. And also how output should look like.  
-The most essential are headlines. Few rules:
+Proper use of this stylesheet requires knowledge about your Markdown text. And also how your output should look like.  
+The most essential elements are headlines. Few rules:
   
-  1. Headlines are always grouping. That means, it will pull together all content until another headline occurs.  
-     Default headline element is `<sect1-6>`. This can be changed with headline-element.  
+  1. Headlines are always grouping. That means, it will pull together all content until another headline of the same level        occurs. Default headline element is `<sect1-6>`. This can be changed with headline-element.  
      For example `headline-element=chapter` will create chapter element with each `<h1>` and other headlines use sections.
-  2. Root-element is used for explicit root usage. It is whole document wrapper. You can achieve this also without  
-     root-element: having exactly one headline of given level and zero or more headlines of higher level in document.
+  2. Root-element is used for explicit root need. It wraps whole document. You can achieve this also without  
+     root-element: having exactly one headline of given level and zero or more headlines of higher level in document produces      document wrapped in given headline element.
+
+
+Markdown transformation
+-----------------------
+
+**Md2doc supports canonical Markdown specification by John Gruber**  
+(http://daringfireball.net/projects/markdown/syntax)  
+Other extensions and variants are not supported, but there is workaround: You can use HTML instead of extensions.  
+When official blessed and widely accepted specification is released, Md2doc will conform to it.
   
-### Scenarios
 
-  1. I have Markdown snippet, with no headlines
-     Using `root` argument will cause all markdown snippet to be wrapped.  
-     Using `headline` will not cause anything because there is no headline.
-  2. I have Markdown structured with multiple h1 headlines
-     Using `root` argument will cause all markdown document to be wrapped.  
-     Using `headline` will cause that every level one headline (and all subsequent elements) will be wrapped in headline  
-     element. Level two and higher headlines will be wrapped too (in `sect1-6`).
-  3. I have Markdown structured with exactly one h1 headline
-     Using `root` argument will cause all markdown document to be wrapped. 
-     Using `headline` will cause whole text to wrapped in headline element. For example in chapter.  
-     Using both arguments will produce `<book><chapter>`, that is one component and one division structure.
+HTML transformation
+-------------------
 
+Markdown supports subset of block HTML elements and anything from inline pool. Md2doc added some HTML5 elements and narrowed range of inline elements.
 
-HTML conversion
----------------
+* Supported blocks:
+  address, article, aside, body, blockquote, button, div, dl, figure, fieldset, footer, form, h1-6, header, map, nav, object,   ol, p, pre, section, table, ul, video, script, noscript, iframe
+
+* Supported inline:
+  a, i, b, br, del, ins, img, abbr, span, small, cite, mark, dfn, kbd, samp, span, var, object, q, script, button, label,      sub, sup, textarea
+
+Note, that Markdown inside HTML is not parsed.  
+
+Md2doc uses David Carlisle's HTML Parser, http://www.dcarlisle.demon.co.uk/htmlparse.xsl
 
 
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+
+Martin Šmíd, 2014
