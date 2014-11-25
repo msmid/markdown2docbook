@@ -33,16 +33,6 @@
                         <xsl:namespace name="xl">http://www.w3.org/1999/xlink</xsl:namespace>  
                     </xsl:if>   
                     <title><xsl:value-of select="$root-element"/></title>
-                    <!--<xsl:if test="
-                        ($root-element eq 'chapter' or
-                        $root-element eq 'article' or
-                        $root-element eq 'preface' or
-                        $root-element eq 'glossary' or
-                        $root-element eq 'dedication' or
-                        $root-element eq 'bibliography')
-                        ">
-                        <title><xsl:value-of select="$root-element"/></title>
-                    </xsl:if>-->
                     <xsl:call-template name="md2doc:headline-grouping">
                         <xsl:with-param name="headline-element" select="$headline-element"/>
                         <xsl:with-param name="root-element" select="$root-element"/>
@@ -104,7 +94,7 @@
                 then $headline-element
                 else concat('sect',translate(replace($this,'h',''),'23456','12345'))
             )
-            else concat('sect',replace($this,'h',''))
+            else 'section'
             }">
             <xsl:if test="$root-element eq '' and $this eq 'h1'">
                 <xsl:attribute name="version" select="5"/>
@@ -174,7 +164,7 @@
     </xsl:template>
     
     <xsl:template match="ol" mode="md2doc:transform">
-        <orderedlist>
+        <orderedlist numeration="arabic">
             <xsl:apply-templates select="*" mode="md2doc:transform"/>
         </orderedlist>
     </xsl:template>
@@ -240,23 +230,29 @@
     
     <xsl:template match="img" mode="md2doc:transform">
         <mediaobject>
+            <alt><xsl:value-of select="@alt"/></alt>
             <imageobject>
                 <imagedata fileref="{@src}"/>
             </imageobject>
-            <textobject>
-                <phrase><xsl:value-of select="@alt"/></phrase>
-            </textobject>
+            <xsl:if test="@title != ''">
+                <textobject>
+                    <phrase><xsl:value-of select="@title"/></phrase>
+                </textobject>
+            </xsl:if>
         </mediaobject>
     </xsl:template>
     
     <xsl:template match="p/img" mode="md2doc:transform">
         <inlinemediaobject>
+            <alt><xsl:value-of select="@alt"/></alt>
             <imageobject>
                 <imagedata fileref="{@src}"/>
             </imageobject>
-            <textobject>
-                <phrase><xsl:value-of select="@alt"/></phrase>
-            </textobject>
+            <xsl:if test="@title != ''">
+                <textobject>
+                    <phrase><xsl:value-of select="@title"/></phrase>
+                </textobject>
+            </xsl:if>
         </inlinemediaobject>
     </xsl:template>
     
@@ -449,11 +445,5 @@
             <xsl:apply-templates mode="md2doc:transform"/>
         </superscript>
     </xsl:template>
-    
-    <!--<xsl:template match="node()|@*" name="identity" mode="#all">
-        <xsl:copy>
-            <xsl:apply-templates select="node()|@*" mode="#current"/>
-        </xsl:copy>
-    </xsl:template>-->
     
 </xsl:stylesheet>
