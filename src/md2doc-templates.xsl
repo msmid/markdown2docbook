@@ -113,6 +113,10 @@
                 </xsl:if>             
             </xsl:if>
             <title><xsl:apply-templates select="." mode="md2doc:transform"/></title>
+            <xsl:variable name="group" select="string-join(current-group(),'')"/>
+            <xsl:if test="string-length(.) eq string-length($group)">
+                <para></para>
+            </xsl:if>
             <xsl:for-each-group select="current-group() except ." group-starting-with="*[name() = $next]">
                 <xsl:apply-templates select="." mode="md2doc:group">
                     <xsl:with-param name="headline-element" select="$headline-element"/>
@@ -218,19 +222,41 @@
         </computeroutput>
     </xsl:template>
     
-    <xsl:template match="em|strong|mark" mode="md2doc:transform">
+    <xsl:template match="em|mark" mode="md2doc:transform">
         <emphasis>
             <xsl:apply-templates select="node()|@*" mode="md2doc:transform"/>
         </emphasis>
     </xsl:template>
     
+    <xsl:template match="strong" mode="md2doc:transform">
+        <emphasis role="strong">
+            <xsl:apply-templates select="node()|@*" mode="md2doc:transform"/>
+        </emphasis>
+    </xsl:template>
+    
+    <xsl:template match="img" mode="md2doc:group">
+        <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
+    </xsl:template>
+    
     <xsl:template match="img" mode="md2doc:transform">
+        <mediaobject>
+            <imageobject>
+                <imagedata fileref="{@src}"/>
+            </imageobject>
+            <textobject>
+                <phrase><xsl:value-of select="@alt"/></phrase>
+            </textobject>
+        </mediaobject>
+    </xsl:template>
+    
+    <xsl:template match="p/img" mode="md2doc:transform">
         <inlinemediaobject>
             <imageobject>
                 <imagedata fileref="{@src}"/>
             </imageobject>
-            <alt><xsl:value-of select="@alt"/></alt>
-            <!--existuje i alt tag a kam dam title informaci?-->
+            <textobject>
+                <phrase><xsl:value-of select="@alt"/></phrase>
+            </textobject>
         </inlinemediaobject>
     </xsl:template>
     
@@ -240,7 +266,10 @@
                 <xsl:value-of select="@href"/>
             </xsl:attribute>
             <xsl:if test="@title != ''">
-                <alt><xsl:value-of select="@title"/></alt>
+<!--                <alt><xsl:value-of select="@title"/></alt>-->
+                <xsl:attribute name="xl:title">
+                    <xsl:value-of select="@title"/>
+                </xsl:attribute>
             </xsl:if>         
             <xsl:apply-templates select="node()" mode="md2doc:transform"/>
         </link>
@@ -369,7 +398,7 @@
     </xsl:template>
     
     <!--HTML inline elements-->
-    <xsl:template match="b|i|del|ins|span|small|dfn|object|textarea|script|button|label" mode="md2doc:transform">
+    <xsl:template match="b|i|ins|span|small|dfn|object|textarea|script|button|label" mode="md2doc:transform">
         <xsl:apply-templates mode="md2doc:transform"/>
     </xsl:template>
     
@@ -383,6 +412,12 @@
         <citation>
             <xsl:apply-templates mode="md2doc:transform"/>
         </citation>
+    </xsl:template>
+    
+    <xsl:template match="del" mode="md2doc:transform">
+        <emphasis role="strikethrough">
+            <xsl:apply-templates mode="md2doc:transform"/>
+        </emphasis>
     </xsl:template>
     
     <xsl:template match="kbd" mode="md2doc:transform">
