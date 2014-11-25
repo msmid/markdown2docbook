@@ -55,7 +55,7 @@
             <xsl:processing-instruction name="xml-model">href="http://docbook.org/xml/5.0/rng/docbook.rng" schematypens="http://relaxng.org/ns/structure/1.0"</xsl:processing-instruction>
             <xsl:processing-instruction name="xml-model">href="http://docbook.org/xml/5.0/rng/docbook.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron</xsl:processing-instruction>
 
-            <xsl:sequence select="md2doc:convert(md2doc:read-file($input, $encoding), $root-element,$headline-element)"/>
+            <xsl:sequence select="md2doc:convert(md2doc:read-file($input, $encoding), $root-element, $headline-element)"/>
 
         </xsl:result-document>
     </xsl:template>
@@ -86,72 +86,8 @@
         <xsl:param name="root-element" as="xs:string" select="$root-element"/>
         <xsl:param name="headline-element" as="xs:string" select="$headline-element"/>
         
-        <!--<xsl:sequence select="md2doc:convert($input,$root-element,$headline-element)"/>-->
         <xsl:sequence select="md2doc:convert($input,$root-element,$headline-element)"/>
         
     </xsl:template>
-    
-    <!--Testing template, will be removed in final version-->
-    <xsl:template name="test">
-        <xsl:param name="encoding" as="xs:string" select="'utf-8'"/>
-        <xsl:param name="input" as="xs:string" select="'../test/in/stackoverflow.md'"/>
-
-        <xsl:result-document href="../test/out/output.xml" format="xhtml" exclude-result-prefixes="doc">
-            <!--<xsl:sequence select="md2doc:print-disclaimer()"/>-->
-            <html>
-                <head>
-                    <title></title>
-                    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-                </head>
-                <body>
-                    <xsl:choose>
-                        <xsl:when test="$encoding eq ''">
-                            <xsl:sequence select="md2doc:get-html($input)"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:variable name="input"
-                                select="md2doc:read-file($input, $encoding)"/>
-                            <xsl:sequence select="md2doc:get-html($input)"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </body>
-            </html>
-        </xsl:result-document>
-        <xsl:result-document href="../test/out/output3.xml" format="docbook">
-            <xsl:processing-instruction name="xml-model">href="http://docbook.org/xml/5.0/rng/docbook.rng" schematypens="http://relaxng.org/ns/structure/1.0"</xsl:processing-instruction>
-            <xsl:processing-instruction name="xml-model">href="http://docbook.org/xml/5.0/rng/docbook.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron</xsl:processing-instruction>
-            <xsl:choose>
-                <xsl:when test="$encoding eq ''">
-                    <xsl:sequence select="md2doc:convert($input, $root-element, $headline-element)"/>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:sequence select="md2doc:convert(md2doc:read-file($input, $encoding), 'book', 'chapter')"/>
-                </xsl:otherwise>
-            </xsl:choose>
-        </xsl:result-document>
-        
-        <xsl:result-document href="../test/out/output2.xml" format="xhtml">
-            <html>
-                <head>
-                    <title></title>
-                    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-                </head>
-                <body>
-                    <xsl:choose>
-                        <xsl:when test="$encoding eq ''">
-                            <xsl:sequence select="d:htmlparse($input)"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:variable name="input"
-                                select="md2doc:read-file($input, $encoding)"/>
-                            <xsl:sequence select="d:htmlparse($input,'',true())"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </body>
-            </html>
-        </xsl:result-document>
-
-    </xsl:template>
-
 
 </xsl:transform>
