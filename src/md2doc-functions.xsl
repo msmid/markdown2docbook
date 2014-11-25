@@ -324,12 +324,8 @@
                 <xsl:element name="{if (matches(.,'^[ ]*[*+-]','m')) then 'ul' else 'ol'}">
                     <xsl:sequence select="md2doc:parse-list-items(md2doc:detab(.), $indent, $refs)"/>
                 </xsl:element>
-                <!--debug-->
-                <!--<obsahListu>&LF;<xsl:copy-of select="."/></obsahListu>
-                <indent><xsl:copy-of select="$indent"/></indent>  -->                        
             </xsl:matching-substring>
             <xsl:non-matching-substring>
-                <!--<xsl:copy-of select="md2doc:parse-blockquotes(concat(., '&#xA;&#xA;'))"/>-->
                 <xsl:sequence select="md2doc:parse-blockquotes(., $refs)"/>
             </xsl:non-matching-substring>
         </xsl:analyze-string>
@@ -377,11 +373,6 @@
                         </xsl:analyze-string>
                     </xsl:variable>
                     <xsl:sequence select="md2doc:run-block($chop, $refs)"/>
-                    <!--debug-->
-                    <!--<input><xsl:copy-of select="$input"/></input>
-                    <strip><xsl:copy-of select="$stripList"/></strip>
-                    <trim><xsl:copy-of select="$trim"/></trim>
-                    <chop><xsl:copy-of select="$chop"/></chop>-->
                 </li>
             </xsl:matching-substring>
             <xsl:non-matching-substring>
@@ -444,23 +435,18 @@
             regex="(?&lt;=\n\n)([ ]{{0,3}}(&lt;!(-\-(.*?)-\-\s*)+&gt;)[ \t]*(?=\n{{2,}}))" flags="m!">
             <xsl:matching-substring>
                 <xsl:comment><xsl:value-of select="regex-group(4)"/></xsl:comment>
-                <!--<xsl:message select="."/>-->
             </xsl:matching-substring>
             <xsl:non-matching-substring>
                 <!--Then proceed on html block elements-->
                 <xsl:analyze-string select="." 
                     regex="(^&lt;({$block-html})\b(.*)*?&lt;/\2&gt;[ \t]*(?=\n+|\Z))" flags="m!">
                     <xsl:matching-substring>
-                        <!--<textarea><xsl:value-of select="."/></textarea>-->
                         <xsl:sequence select="d:htmlparse(.,'',true())"/>
-                        <!--<xsl:message select="."/>-->
                     </xsl:matching-substring>
                     <xsl:non-matching-substring>
                         <xsl:analyze-string select="." regex="(^&lt;({$block-html})\b(.*\n)*?&lt;/\2&gt;[ \t]*(?=\n+|\Z))" flags="m!">
                             <xsl:matching-substring>
-                                <!--<textarea><xsl:value-of select="."/></textarea>-->
                                 <xsl:sequence select="d:htmlparse(.,'',true())"/>
-                                <!--<xsl:message select="."/>-->
                             </xsl:matching-substring>
                             <xsl:non-matching-substring>
                                 <!--Dont forget on self-closing tags-->
@@ -468,11 +454,9 @@
                                     regex="(?&lt;=\n\n)([ ]{{0,3}}&lt;(embed|hr|br|img)\b([^&lt;&gt;])*?/?&gt;[ \t]*(?=\n{{2,}}))" flags="m!">
                                     <xsl:matching-substring>
                                         <xsl:sequence select="d:htmlparse(.,'',true())"/>
-                                        <!--<xsl:message select="."/>-->
                                     </xsl:matching-substring>
                                     <xsl:non-matching-substring>
                                         <xsl:sequence select="md2doc:parse-paragraphs(., $refs)"/> 
-                                        <!--<xsl:message select="."/>-->
                                     </xsl:non-matching-substring>                                  
                                 </xsl:analyze-string>
                             </xsl:non-matching-substring>
@@ -497,17 +481,6 @@
         <xsl:param name="refs"/>
         
         <xsl:variable name="text" select="string-join($input,'')"/>
-<!--        <inputText><xsl:value-of select="$text"/></inputText>-->
-        <!--<xsl:analyze-string select="$text" regex="^.+\n{{2,}}" flags="m">
-            <xsl:matching-substring>
-                <p><xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),'([ ]|\n)+$',''), $refs)"/></p>
-            </xsl:matching-substring>
-            <xsl:non-matching-substring>
-                <xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),'([ ]|\n)+$',''), $refs)"/>
-            </xsl:non-matching-substring>
-        </xsl:analyze-string>-->
-        
-<!--        <xsl:variable name="split" select="tokenize(replace(replace($text,'^\n',''),'\n+$',''),'\n{2,}')"/>-->
         <xsl:variable name="split" select="tokenize($text,'\n{2,}')"/>
         <xsl:for-each select="$split">
             <xsl:choose>
@@ -521,25 +494,10 @@
                         </xsl:when>
                         <xsl:otherwise>
                             <p><xsl:sequence select="md2doc:run-inline(replace(.,'^ +',''), $refs)"/></p>
-<!--                            <paracontent><xsl:value-of select="."/></paracontent>-->
                         </xsl:otherwise>
                     </xsl:choose>
-                    <!--<p><xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),'([ ]|\n)+$',''), $refs)"/></p>
-                    <paracontent><xsl:value-of select="."/></paracontent>-->
                 </xsl:otherwise>
             </xsl:choose>
-            
-            <!--<p><xsl:copy-of select="md2doc:run-inline(replace(replace(replace(.,'\n',' '),'^ +',''),' +$',''), $refs)"/></p>-->
-            <!--<p><xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),' +$',''), $refs)"/></p>
-            <paracontent><xsl:value-of select="."/></paracontent>-->
-            <!--<xsl:choose>
-                <xsl:when test="matches(.,'\n$')">
-                    <p><xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),' +$',''), $refs)"/></p>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:sequence select="md2doc:run-inline(replace(replace(.,'^ +',''),' +$',''), $refs)"/>
-                </xsl:otherwise>
-            </xsl:choose>-->
         </xsl:for-each>
     </xsl:function>
     
@@ -661,17 +619,19 @@
         <xsl:param name="refs"/>
         
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:analyze-string select="$text" regex="(\*|_)+(?=\S)(.+?[*_]*)(?&lt;=\S)(\*|_)" flags="!">
+        <xsl:analyze-string select="$text" regex="(?&lt;!\\)(\*|_)+(?=\S)(.+?[*_]*)(?&lt;=\S)(\*|_)" flags="!">
             <xsl:matching-substring>
+                <xsl:variable name="start" select="regex-group(1)"/>
+                <xsl:variable name="end" select="regex-group(3)"/>
                 <xsl:choose>
-                    <xsl:when test="matches(.,'^(\*\*|__)') and matches(.,'(\*\*|__)$')">
+                    <xsl:when test="matches(.,'^(\*\*|__)') and matches(.,'(\*\*|__)$') and $start eq $end">
                         <strong><xsl:sequence select="md2doc:parse-codespans(replace(replace(.,'^(\*\*|__)',''),'(\*\*|__)$',''),$refs)"/></strong>
                     </xsl:when>
-                    <xsl:when test="matches(.,'^(\*|_)') and matches(.,'(\*|_)$')">
+                    <xsl:when test="matches(.,'^(\*|_)') and matches(.,'(\*|_)$') and $start eq $end">
                         <em><xsl:sequence select="md2doc:parse-codespans(replace(replace(.,'^(\*|_)',''),'(\*|_)$',''),$refs)"/></em>
                     </xsl:when>
                     <xsl:otherwise>
-                        
+                        <xsl:value-of select="."/>
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:matching-substring>
@@ -695,7 +655,7 @@
         
         <xsl:variable name="text" select="string-join($input,'')"/>
         <!--Reference style-->
-        <xsl:analyze-string select="$text" regex="(!\[(.*?)\][ ]?(?:\n[ ]*)?\[(.*?)\])" flags="!">
+        <xsl:analyze-string select="$text" regex="(?&lt;!\\)(!\[(.*?)(?&lt;!\\)\][ ]?(?:\n[ ]*)?\[(.*?)\])" flags="!">
             <xsl:matching-substring>
                 <xsl:variable name="id" select="lower-case(regex-group(3))"/>
                 <xsl:choose>
@@ -714,7 +674,7 @@
             <xsl:non-matching-substring>
                 <!--Inline style images-->
                 <xsl:analyze-string select="." 
-                    regex="(!\[(.*?)\]\([ \t]*&lt;?(\S+?)&gt;?[ \t]*(([&quot;])(.*?)\5[ \t]*)?\))" flags="">
+                    regex="(?&lt;!\\)(!\[(.*?)(?&lt;!\\)\]\([ \t]*&lt;?(\S+?)&gt;?[ \t]*(([&quot;])(.*?)\5[ \t]*)?\))" flags="!">
                     <xsl:matching-substring>
                         <xsl:element name="img">
                             <xsl:attribute name="src" select="regex-group(3)"/>
@@ -745,7 +705,7 @@
         
         <xsl:variable name="text" select="string-join($input,'')"/>
         <!--Reference style first-->
-        <xsl:analyze-string select="$text" regex="(\[(.*?)\][ ]?(?:\n[ ]*)?\[(.*?)\])" flags="!">
+        <xsl:analyze-string select="$text" regex="(?&lt;!\\)(\[(.*?)(?&lt;!\\)\][ ]?(?:\n[ ]*)?\[(.*?)\])" flags="!">
             <xsl:matching-substring>
                 <xsl:variable name="id" select="lower-case(regex-group(3))"/>
                 <xsl:choose>
@@ -771,7 +731,7 @@
             <xsl:non-matching-substring>
                 <!--Inline style-->
                 <xsl:analyze-string select="." 
-                    regex="(\[(.*?)\]\([ \t]*&lt;?(.*?)&gt;?[ \t]*(([&quot;])(.*?)\5)?\))" flags="!">
+                    regex="(?&lt;!\\)(\[(.*?)(?&lt;!\\)\]\([ \t]*&lt;?(.*?)&gt;?[ \t]*(([&quot;])(.*?)\5)?\))" flags="!">
                     <xsl:matching-substring>
                         <xsl:element name="a">
                             <xsl:attribute name="href" select="regex-group(3)"/>
@@ -800,7 +760,8 @@
         <xsl:param name="refs"/>
         
         <xsl:variable name="text" select="string-join($input,'')"/>
-        <xsl:analyze-string select="$text" regex="&lt;((https?|ftp):[^&apos;&quot;&gt;\s]+)&gt;">
+        <xsl:analyze-string select="$text" 
+            regex="(?&lt;!\\)&lt;((https?|ftp):[^&apos;&quot;&gt;\s]+)(?&lt;!\\)&gt;" flags="!">
             <xsl:matching-substring>
                 <xsl:element name="a">
                     <xsl:attribute name="href" select="regex-group(1)"/>
