@@ -38,7 +38,7 @@ There is nothing easier. Use `<xsl:import>` element. Don't forget about namespac
     <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
          xmlns:md2doc="http://www.markdown2docbook.com/ns/md2doc"> ...
          
- Also make sure that all stylesheets (md2doc.xsl, md2doc-templates.xsl and md2doc-functions.xsl) are in same directory.
+ Also make sure that all stylesheets (md2doc.xsl, md2doc-templates.xsl and md2doc-functions.xsl) are in the same directory.
 
   **Now you can use following md2doc functions:**
      
@@ -95,6 +95,10 @@ The best way how to transform those snippets is to import `md2doc.xsl` into your
     </xsl:template>
     
 `programlisting` is for example purposes only. Markdown doesn't has to be in such element. You can add into DocBook your own namespaced element which denotes Markdown text. But careful, on automatic escaping. If you insert some HTML into your Markdown, you have to use `CDATA` section.   
+
+### 4. Using Md2doc for HTML output ###
+
+If you want to use XSLT implementation for generating HTML output in the same way as original `Markdown.pl` does, use `md2doc:get-html()` function or `get-html` template.
     
 Using root and headline parameters 
 ----------------------------------
@@ -106,6 +110,14 @@ The most essential elements are headlines. Few rules:
      For example `headline-element=chapter` will create chapter element with each `<h1>` and other headlines use sections.
   2. Root-element is used for explicit root need. It wraps whole document. You can achieve this also without  
      root-element: having exactly one headline of given level and zero or more headlines of higher level in document produces      document wrapped in given headline element.
+  3. Using root-element as division level structure (for example book) expects that user wants to convert stand-alone             Markdown document. It requires usage of level one headlines and headline-element declaration (eg. chapter) for proper        output.
+  4. Setting headline-element blank (eg. `headline-element=''`) results with using universal `<section>` for grouping by          headlines.
+     1. This is useful when you declare root-element as component level tag (eg. chapter).
+     2. You will get non-valid DocBook, if you set root-element as division level tag and leave headline-element blank. It is         because you can't have `<section>` as direct child of `<book>`. You have to declare headline-element as component            level tag for proper output.
+
+Note: DocBook division and component elements are specified in [DocBook 5: The Definitive Guide][1].
+
+[1]: http://www.docbook.org/tdg5/en/html/ch02.html#ch02-logdiv 
 
 
 Markdown transformation
@@ -123,10 +135,10 @@ HTML transformation
 Markdown supports subset of block HTML elements and anything from inline pool. Md2doc added some HTML5 elements and narrowed range of inline elements.
 
 * Supported blocks:
-  address, article, aside, body, blockquote, button, div, dl, figure, fieldset, footer, form, h1-6, header, map, nav, object,   ol, p, pre, section, table, ul, video, script, noscript, iframe
+  _address, article, aside, body, blockquote, button, div, dl, figure, fieldset, footer, form, h1-6, header, map, nav, object,   ol, p, pre, section, table, ul, video, script, noscript, iframe_
 
 * Supported inline:
-  a, i, b, br, del, ins, img, abbr, span, small, cite, mark, dfn, kbd, samp, span, var, object, q, script, button, label,      sub, sup, textarea
+  _a, i, b, br, del, ins, img, abbr, span, small, cite, mark, dfn, kbd, samp, span, var, object, q, script, button, label,      sub, sup, textarea_
 
 Note, that Markdown inside HTML is not parsed.  
 
