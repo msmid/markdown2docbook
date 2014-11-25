@@ -602,7 +602,9 @@
         <xsl:param name="refs"/>
         <xsl:variable name="text" select="string-join($input,'')"/>
         <!--List of accepted html elements-->
-        <xsl:variable name="inline-html" select="string('a|i|b|del|ins|abbr|span|small|cite|mark|dfn|kbd|samp|span|var|object|q|script|button|label|sub|sup|textarea')"/>
+        <xsl:variable name="inline-html" 
+            select="concat('a|i|b|del|ins|abbr|span|small|cite|mark|dfn|',
+            'kbd|samp|span|var|object|q|script|button|label|sub|sup|textarea')"/>
         <xsl:analyze-string select="$text" regex="(&lt;({$inline-html})\b((.*\n)*?.*)&lt;/\2&gt;)" flags="!">
             <xsl:matching-substring>
                 <xsl:sequence select="d:htmlparse(.,'',true())"/>
@@ -705,7 +707,7 @@
                         </xsl:element>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:sequence select="md2doc:run-inline(., $refs)"/>
+                        <xsl:value-of select="."/>
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:matching-substring>
