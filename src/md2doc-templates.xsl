@@ -72,7 +72,6 @@
                 <xsl:with-param name="headline-element" select="$headline-element"/>
                 <xsl:with-param name="root-element" select="$root-element"/>
             </xsl:apply-templates>
-            <xsl:message select="'group: ', current-group()"/>
         </xsl:for-each-group>
     </xsl:template>
     
@@ -114,7 +113,6 @@
                     <xsl:with-param name="root-element" select="$root-element"/>
                 </xsl:apply-templates>
             </xsl:for-each-group>
-            <xsl:message select="'except group: ', current-group() except ."></xsl:message>
         </xsl:element>
     </xsl:template> 
     
