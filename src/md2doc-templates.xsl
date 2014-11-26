@@ -72,6 +72,7 @@
                 <xsl:with-param name="headline-element" select="$headline-element"/>
                 <xsl:with-param name="root-element" select="$root-element"/>
             </xsl:apply-templates>
+            <xsl:message select="'group: ', current-group()"/>
         </xsl:for-each-group>
     </xsl:template>
     
@@ -102,7 +103,7 @@
                     <xsl:namespace name="xl">http://www.w3.org/1999/xlink</xsl:namespace>  
                 </xsl:if>             
             </xsl:if>
-            <title><xsl:apply-templates select="." mode="md2doc:transform"/></title>
+            <title><xsl:apply-templates mode="md2doc:transform"/></title>
             <xsl:variable name="group" select="string-join(current-group(),'')"/>
             <xsl:if test="string-length(.) eq string-length($group)">
                 <para></para>
@@ -113,8 +114,13 @@
                     <xsl:with-param name="root-element" select="$root-element"/>
                 </xsl:apply-templates>
             </xsl:for-each-group>
+            <xsl:message select="'except group: ', current-group() except ."></xsl:message>
         </xsl:element>
     </xsl:template> 
+    
+    <xsl:template match="h1|h2|h3|h4|h5|h6" mode="md2doc:transform">
+        <para><xsl:apply-templates mode="md2doc:transform"/></para>
+    </xsl:template>
     
     <xsl:template match="p" mode="md2doc:group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/>
@@ -183,7 +189,7 @@
     </xsl:template>
     
     <xsl:template match="li/h1|li/h2|li/h3|li/h4|li/h5|li/h6" mode="md2doc:transform">
-        <para><xsl:apply-templates mode="md2doc:transform"/></para>
+        <xsl:apply-templates mode="md2doc:transform"/>
     </xsl:template>
     
     <xsl:template match="pre" mode="md2doc:group">
@@ -282,9 +288,9 @@
     </xsl:template>
 
     <xsl:template match="article|aside|body|button|div|
-        figure|fieldset|footer|form|header|map|nav|object|section|
+        fieldset|footer|form|header|map|nav|object|section|
         script|noscript|iframe" mode="md2doc:transform">
-        <para><xsl:value-of select="node()|@*"/></para>
+        <para><xsl:apply-templates select="node()|@*" mode="md2doc:transform"/></para>
     </xsl:template>
     
     <xsl:template match="address" mode="md2doc:transform">
@@ -295,9 +301,9 @@
     
     <xsl:template match="video" mode="md2doc:transform">
         <mediaobject>
-            <videobject>
+            <videoobject>
                 <videodata fileref="{@src}"/>
-            </videobject>
+            </videoobject>
             <textobject>
                 <para><xsl:value-of select="text()"/></para>
             </textobject>
@@ -306,11 +312,20 @@
     
     <xsl:template match="embed[starts-with(@type,'video')]" mode="md2doc:transform">
         <mediaobject>
-            <videobject>
+            <videoobject>
                 <videodata fileref="{@src}"/>
-            </videobject>
+            </videoobject>
         </mediaobject>
     </xsl:template>
+    
+    <xsl:template match="figure" mode="md2doc:transform">
+        <figure>
+            <title><xsl:apply-templates select="figcaption/node()|@*" mode="md2doc:transform"/></title>
+            <xsl:apply-templates select="node()|@*" mode="md2doc:transform"/>
+        </figure>
+    </xsl:template>
+    
+    <xsl:template match="figure/figcaption" mode="md2doc:transform"/>
     
     <!--Table transform-->   
     <xsl:template match="table" mode="md2doc:group">
@@ -395,7 +410,7 @@
     
     <!--HTML inline elements-->
     <xsl:template match="b|i|ins|span|small|dfn|object|textarea|script|button|label" mode="md2doc:transform">
-        <xsl:apply-templates mode="md2doc:transform"/>
+        <phrase><xsl:apply-templates mode="md2doc:transform"/></phrase>
     </xsl:template>
     
     <xsl:template match="abbr" mode="md2doc:transform">
