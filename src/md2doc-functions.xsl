@@ -490,10 +490,10 @@
                 <xsl:otherwise>
                     <xsl:choose>
                         <xsl:when test="matches(.,'\n$')">
-                            <xsl:sequence select="md2doc:run-inline(replace(.,'^ +',''), $refs)"/>
+                            <xsl:sequence select="md2doc:run-inline(replace(replace(.,'[ \n]+$',''),'^ +',''), $refs)"/>
                         </xsl:when>
                         <xsl:otherwise>
-                            <p><xsl:sequence select="md2doc:run-inline(replace(.,'^ +',''), $refs)"/></p>
+                            <p><xsl:sequence select="md2doc:run-inline(replace(replace(.,' +$',''),'^ +',''), $refs)"/></p>
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:otherwise>
