@@ -81,7 +81,7 @@ Because you can't run XSL over non-XML files, you have to run XSLT processor wit
 
   Running from command line
   
-     java  -jar dir/saxon9he.jar it main input=input.md encoding=utf-8 root-element=book headline-element=chapter  
+     java  -jar dir/saxon9he.jar -it:main md2doc.xsl input=input.md encoding=utf-8 root-element=book headline-element=chapter  
      savepath=output.xml 
 
   XSL editors should allow you to set options and parameters in transformation scenarios.
