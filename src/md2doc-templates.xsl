@@ -279,13 +279,13 @@
         <xsl:text> </xsl:text>
     </xsl:template>
     
-    <xsl:template match="address|article|aside|body|button|div|
+    <xsl:template match="address|article|aside|body|button|div|embed|
         figure|fieldset|footer|form|header|map|nav|object|section|
         video|script|noscript|iframe" mode="md2doc:group">
         <xsl:apply-templates select="current-group()" mode="md2doc:transform"/> 
     </xsl:template>
 
-    <xsl:template match="article|aside|body|button|div|
+    <xsl:template match="article|aside|body|button|div|embed|
         fieldset|footer|form|header|map|nav|object|section|
         script|noscript|iframe" mode="md2doc:transform">
         <para><xsl:apply-templates select="node()|@*" mode="md2doc:transform"/></para>
@@ -391,18 +391,16 @@
     
     <xsl:template match="dl" mode="md2doc:transform">
         <variablelist>
-            <varlistentry>
-                <xsl:for-each select="dt">
+            <xsl:for-each select="dt">
+                <varlistentry>
                     <term>
-                        <xsl:apply-templates mode="md2doc:transform"/>
+                        <xsl:apply-templates select="." mode="md2doc:transform"/>
                     </term>
-                </xsl:for-each>
-                <xsl:for-each select="dd">
                     <listitem>
-                        <para><xsl:apply-templates mode="md2doc:transform"/></para>
+                        <para><xsl:apply-templates select="./following-sibling::dd[1]" mode="md2doc:transform"/></para>
                     </listitem>
-                </xsl:for-each>
-            </varlistentry>
+                </varlistentry>
+            </xsl:for-each>
         </variablelist>
     </xsl:template>
     
