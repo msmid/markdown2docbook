@@ -675,9 +675,9 @@
                 <xsl:choose>
                     <xsl:when test="$refs/reference[@id = $id]">
                         <xsl:element name="img">
-                            <xsl:attribute name="src" select="$refs/reference[@id = $id]/@url"/>
+                            <xsl:attribute name="src" select="$refs/reference[last()][@id = $id]/@url"/>
                             <xsl:attribute name="alt" select="regex-group(2)"/>
-                            <xsl:attribute name="title" select="$refs/reference[@id = $id]/@title"/>
+                            <xsl:attribute name="title" select="$refs/reference[last()][@id = $id]/@title"/>
                         </xsl:element>
                     </xsl:when>
                     <xsl:otherwise>
@@ -727,17 +727,17 @@
                 <xsl:choose>
                     <xsl:when test="$refs/reference[@id = $id]">
                         <xsl:element name="a">
-                            <xsl:attribute name="href" select="$refs/reference[@id = $id]/@url"/>
-                            <xsl:attribute name="title" select="$refs/reference[@id = $id]/@title"/>
+                            <xsl:attribute name="href" select="$refs/reference[last()][@id = $id]/@url"/>
+                            <xsl:attribute name="title" select="$refs/reference[last()][@id = $id]/@title"/>
                             <xsl:copy-of select="md2doc:parse-codespans(regex-group(2), $refs)"/>
                         </xsl:element>   
                     </xsl:when>
                     <xsl:when test="$refs/reference[@id = lower-case(regex-group(2))]">
                         <xsl:element name="a">
                             <xsl:attribute name="href" 
-                                select="$refs/reference[@id = lower-case(regex-group(2))]/@url"/>
+                                select="$refs/reference[last()][@id = lower-case(regex-group(2))]/@url"/>
                             <xsl:attribute name="title" 
-                                select="$refs/reference[@id = lower-case(regex-group(2))]/@title"/>
+                                select="$refs/reference[last()][@id = lower-case(regex-group(2))]/@title"/>
                             <xsl:copy-of select="md2doc:parse-codespans(regex-group(2), $refs)"/>
                         </xsl:element>
                     </xsl:when>
