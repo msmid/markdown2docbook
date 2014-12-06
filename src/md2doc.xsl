@@ -7,7 +7,7 @@
     exclude-result-prefixes="xs xl doc d md2doc" xpath-default-namespace="">
     
     <!--
-        MAIN stylesheet
+        MAIN stylesheet Md2doc 1.0.2
 
         Markdown Parser in XSLT2 Copyright 2014 Martin Šmíd
         This code is under MIT licence, see more at https://github.com/MSmid/markdown2docbook
