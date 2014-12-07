@@ -634,13 +634,13 @@
                     <xsl:when test="matches(.,'^(\*\*|__)') and matches(.,'(\*\*|__)$') and $start eq $end">
                         <strong>
                             <xsl:sequence 
-                                select="md2doc:parse-codespans(replace(replace(.,'^(\*\*|__)',''),'(\*\*|__)$',''),$refs)"/>
+                                select="md2doc:run-inline(replace(replace(.,'^(\*\*|__)',''),'(\*\*|__)$',''),$refs)"/>
                         </strong>
                     </xsl:when>
                     <xsl:when test="matches(.,'^(\*|_)') and matches(.,'(\*|_)$') and $start eq $end">
                         <em>
                             <xsl:sequence 
-                                select="md2doc:parse-codespans(replace(replace(.,'^(\*|_)',''),'(\*|_)$',''),$refs)"/>
+                                select="md2doc:run-inline(replace(replace(.,'^(\*|_)',''),'(\*|_)$',''),$refs)"/>
                         </em>
                     </xsl:when>
                     <xsl:otherwise>
@@ -729,7 +729,7 @@
                         <xsl:element name="a">
                             <xsl:attribute name="href" select="$refs/reference[@id = $id]/@url"/>
                             <xsl:attribute name="title" select="$refs/reference[@id = $id]/@title"/>
-                            <xsl:copy-of select="md2doc:parse-codespans(regex-group(2), $refs)"/>
+                            <xsl:copy-of select="md2doc:run-inline(regex-group(2), $refs)"/>
                         </xsl:element>   
                     </xsl:when>
                     <xsl:when test="$refs/reference[@id = lower-case(regex-group(2))]">
