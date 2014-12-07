@@ -7,7 +7,7 @@
     exclude-result-prefixes="xs xl doc d md2doc" xpath-default-namespace="">
     
     <!--
-        MAIN stylesheet Md2doc 1.0.2
+        MAIN stylesheet Md2doc 1.0.3
 
         Markdown Parser in XSLT2 Copyright 2014 Martin Šmíd
         This code is under MIT licence, see more at https://github.com/MSmid/markdown2docbook
@@ -89,5 +89,6 @@
         <xsl:sequence select="md2doc:convert($input,$root-element,$headline-element)"/>
         
     </xsl:template>
+
 
 </xsl:transform>

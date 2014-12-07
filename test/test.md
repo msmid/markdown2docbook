@@ -2,7 +2,7 @@
 
 by Martin Smid
 
-md2doc version 1.0.1
+md2doc version 1.0.3
 
 ## LISTS ##
 

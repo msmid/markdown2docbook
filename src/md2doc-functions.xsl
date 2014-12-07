@@ -7,7 +7,7 @@
     version="2.0">
     
     <!--
-        FUNCTION LIBRARY stylesheet Md2doc 1.0.2
+        FUNCTION LIBRARY stylesheet Md2doc 1.0.3
         
         Markdown Parser in XSLT2 Copyright 2014 Martin Šmíd
         This code is under MIT licence, see more at https://github.com/MSmid/markdown2docbook
