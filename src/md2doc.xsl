@@ -7,7 +7,7 @@
     exclude-result-prefixes="xs xl doc d md2doc" xpath-default-namespace="">
     
     <!--
-        MAIN stylesheet Md2doc 1.0.3
+        MAIN stylesheet Md2doc 1.0.4
 
         Markdown Parser in XSLT2 Copyright 2014 Martin Šmíd
         This code is under MIT licence, see more at https://github.com/MSmid/markdown2docbook
@@ -44,7 +44,7 @@
     ! @param $headline-element specifies if h1 elements should be wrapped in passed element
     ! @param $savepath location and name where output should be saved (eg ../output.xml)
     -->
-    <xsl:template name="main">
+    <xsl:template name="md2doc:main">
         <xsl:param name="input" as="xs:string" select="$input"/>
         <xsl:param name="encoding" as="xs:string" select="$encoding"/>
         <xsl:param name="root-element" as="xs:string" select="$root-element"/>
@@ -66,7 +66,7 @@
     ! @param $input string to be parsed into HTML
     ! @return HTML tree
     -->
-    <xsl:template name="get-html">
+    <xsl:template name="md2doc:get-html">
         <xsl:param name="input" as="xs:string" select="$input"/>
 
         <xsl:sequence select="md2doc:get-html($input)"/>
@@ -81,7 +81,7 @@
     ! @param $headline-element specifies if h1 elements should be wrapped in passed element
     ! @return HTML tree
     -->
-    <xsl:template name="convert">
+    <xsl:template name="md2doc:convert">
         <xsl:param name="input" as="xs:string" select="$input"/>
         <xsl:param name="root-element" as="xs:string" select="$root-element"/>
         <xsl:param name="headline-element" as="xs:string" select="$headline-element"/>
@@ -90,5 +90,19 @@
         
     </xsl:template>
 
+    <xsl:template name="md2doc:test">
+        <xsl:result-document href="../test/out/output3.xml" format="docbook">
+            <xsl:processing-instruction name="xml-model">href="http://docbook.org/xml/5.0/rng/docbook.rng" schematypens="http://relaxng.org/ns/structure/1.0"</xsl:processing-instruction>
+            <xsl:processing-instruction name="xml-model">href="http://docbook.org/xml/5.0/rng/docbook.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron</xsl:processing-instruction>
+            
+            <xsl:sequence select="md2doc:convert(md2doc:read-file('../test/in/test-frag.md', 'utf-8'), 'book', 'chapter')"/>
+            
+        </xsl:result-document>
+        <xsl:result-document href="../test/out/output.xml" format="html5">
+            
+            <xsl:sequence select="md2doc:get-html(md2doc:read-file('../test/in/test-frag.md', 'utf-8'))"/>
+            
+        </xsl:result-document>
+    </xsl:template>
 
 </xsl:transform>
