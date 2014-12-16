@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://docbook.org/xml/5.0/rng/docbook.rng" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="http://docbook.org/xml/5.0/rng/docbook.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron?>
+<book xmlns="http://docbook.org/ns/docbook"
+      xmlns:xl="http://www.w3.org/1999/xlink"
+      version="5">
+   <title>book</title>
+   <chapter>
+      <title>TEST MARKDOWN SHEET</title>
+      <para>by Martin Smid</para>
+      <para>md2doc version 1.0.4</para>
+      <sect1>
+         <title>LISTS</title>
+         <para>ul list:</para>
+         <itemizedlist>
+            <listitem>
+               <para>list item</para>
+            </listitem>
+            <listitem>
+               <para>list item with <emphasis>inline</emphasis> element</para>
+            </listitem>
+            <listitem>
+               <para>different marks</para>
+            </listitem>
+         </itemizedlist>
+         <para>ol list:</para>
+         <orderedlist numeration="arabic">
+            <listitem>
+               <para>number one item</para>
+            </listitem>
+            <listitem>
+               <para>number <emphasis role="strong">two</emphasis> item</para>
+            </listitem>
+            <listitem>
+               <para>marked as 8th item</para>
+            </listitem>
+         </orderedlist>
+         <para>nested structures:</para>
+         <itemizedlist>
+            <listitem>list item<itemizedlist>
+                  <listitem>
+                     <para>nested ul list</para>
+                  </listitem>
+               </itemizedlist>
+               <para>nested paragraph.</para>
+               <programlisting>  nested codeblock! 
+</programlisting>
+               <blockquote>
+                  <para>nested blockquote</para>
+               </blockquote>nested header</listitem>
+            <listitem>
+               <para>again list item
+with lazy paragraph.</para>
+            </listitem>
+         </itemizedlist>
+         <para>special case:</para>
+         <itemizedlist>
+            <listitem>
+               <para>indended by three spaces<itemizedlist>
+                     <listitem>
+                        <para>no indend at all</para>
+                     </listitem>
+                  </itemizedlist>
+               </para>
+            </listitem>
+            <listitem>
+               <para>again three spaces</para>
+            </listitem>
+         </itemizedlist>
+      </sect1>
+      <sect1>
+         <title>BLOCKQUOTES</title>
+         <blockquote>
+            <para>This is a header.</para>
+            <itemizedlist>
+               <listitem>
+                  <para>list 1</para>
+               </listitem>
+               <listitem>
+                  <para>list 2</para>
+               </listitem>
+            </itemizedlist>
+            <para>Here's some example code:</para>
+            <programlisting>return shell_exec("echo $input | $markdown_script");    
+</programlisting>
+         </blockquote>
+         <para>Lazy blockquote</para>
+         <blockquote>
+            <para>This is blockquote
+and these two
+are lazy lines</para>
+         </blockquote>
+      </sect1>
+      <sect1>
+         <title>HEADERS</title>
+         <para>Setext-style</para>
+      </sect1>
+   </chapter>
+   <chapter>
+      <title>Headline h1</title>
+      <sect1>
+         <title>Headline h2</title>
+         <para>
+ATX-style</para>
+      </sect1>
+   </chapter>
+   <chapter>
+      <title>headline 1</title>
+      <sect1>
+         <title>headline 2 with trailing hashes</title>
+         <sect2>
+            <title>headline 3</title>
+            <sect3>
+               <title>headline 4</title>
+               <sect4>
+                  <title>headline 5</title>
+                  <sect5>
+                     <title>headline 6</title>
+                     <para/>
+                  </sect5>
+                  <sect5>
+                     <title>#### Still headline 6</title>
+                     <para/>
+                  </sect5>
+               </sect4>
+            </sect3>
+         </sect2>
+      </sect1>
+      <sect1>
+         <title>RULERS</title>
+         <para>various combinations of five rulers</para>
+      </sect1>
+      <sect1>
+         <title>CODEBLOCKS</title>
+         <para>Four spaces indended codeblock</para>
+         <programlisting>This is codeblock with &lt; and &amp;
+    another line 
+</programlisting>
+      </sect1>
+      <sect1>
+         <title>PARAGRAPHS</title>
+         <para>This is para,
+this whole,
+is one para</para>
+         <para>but this is new para</para>
+      </sect1>
+      <sect1>
+         <title>BLOCK HTML</title>
+         <para>
+            <informaltable>
+               <tr>
+                  <td>Table inside div</td>
+               </tr>
+            </informaltable>
+         </para>
+         <para>gotClasson one line</para>
+      </sect1>
+      <sect1>
+         <title>CODESPANS</title>
+         <para>This is text with <computeroutput>code</computeroutput> in it.
+Sometimes I want to add strong to it <emphasis role="strong">
+               <computeroutput>strong code</computeroutput>
+            </emphasis>.
+Also I want to write about Markdown syntax <computeroutput>code looks like `this`</computeroutput>.</para>
+      </sect1>
+      <sect1>
+         <title>INLINE HTML</title>
+         <para>Sometimes I need inline <citation>cite</citation>,
+or image with attributes <inlinemediaobject>
+               <alt>img</alt>
+               <imageobject>
+                  <imagedata fileref="img.jpg"/>
+               </imageobject>
+            </inlinemediaobject>.
+Weird but nested <emphasis>&lt;i&gt;html&lt;i/&gt;</emphasis>.</para>
+      </sect1>
+      <sect1>
+         <title>HARDBREAKS</title>
+         <para>Well, I need to end text here and start over!</para>
+      </sect1>
+      <sect1>
+         <title>SPANS</title>
+         <para>This is <emphasis role="strong">strong</emphasis> and this is __not**.
+Nested spans looks like <emphasis role="strong">
+               <emphasis>this!</emphasis>
+            </emphasis>
+         </para>
+      </sect1>
+      <sect1>
+         <title>IMAGES AND ANCHORS</title>
+         <para>There is imaginative inline <inlinemediaobject>
+               <alt>image</alt>
+               <imageobject>
+                  <imagedata fileref="path/to/img"/>
+               </imageobject>
+               <textobject>
+                  <phrase>inline image</phrase>
+               </textobject>
+            </inlinemediaobject>,
+but here is referenced <inlinemediaobject>
+               <alt>image</alt>
+               <imageobject>
+                  <imagedata fileref="path/to/img"/>
+               </imageobject>
+               <textobject>
+                  <phrase>referenced img</phrase>
+               </textobject>
+            </inlinemediaobject>.</para>
+         <para>Anchors are <link xl:href="www.vse.cz" xl:title="inline anchor">similiar</link>,
+really <link xl:href="www.vse.cz" xl:title="referenced anchor">similiar</link>.</para>
+         <para>Try implicit emphasised link on <emphasis>
+               <link xl:href="www.google.com" xl:title="google">Google</link>
+            </emphasis>.</para>
+      </sect1>
+      <sect1>
+         <title>AUTOMATIC LINKS</title>
+         <para>This is automatic <link xl:href="http://www.markdown2docbook.com">http://www.markdown2docbook.com</link>
+         </para>
+      </sect1>
+      <sect1>
+         <title>ESCAPING</title>
+         <para>I want to write file with underscores bg_body_out.png</para>
+         <para>How to treat &lt;, &amp; and &gt;</para>
+      </sect1>
+      <sect1>
+         <title>SPECIAL CASES</title>
+         <para>Asterisk * looks like <link xl:href="path/to/star">star*</link>
+         </para>
+         <para>![<emphasis>image</emphasis>](img.png)</para>
+         <para>this is headline 2</para>
+      </sect1>
+      <sect1>
+         <title>* * *</title>
+         <para>
+and this is one list</para>
+         <itemizedlist>
+            <listitem>
+               <para>
+                  <itemizedlist>
+                     <listitem>
+                        <para>this is not nested</para>
+                     </listitem>
+                  </itemizedlist>
+               </para>
+            </listitem>
+         </itemizedlist>
+         <para>This text needs to have escaped dot .</para>
+         <orderedlist numeration="arabic">
+            <listitem>
+               <para>Oops, now this line is treated
+as a sub-list.</para>
+            </listitem>
+         </orderedlist>
+      </sect1>
+   </chapter>
+</book>

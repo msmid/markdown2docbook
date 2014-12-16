@@ -248,3 +248,10 @@ test/test2.xml
 src/templates/book.xml
 src/templates/book.xml
 test/in/stackoverflow.md
+test/tests/grouping.xsl
+test/tests/gruping.xml
+test/tests/test.xml
+test/tests/test.xsl
+test/tests/test2.xml
+examples/book.xml
+examples/book-transform.xsl

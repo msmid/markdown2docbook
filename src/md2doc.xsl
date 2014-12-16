@@ -90,19 +90,4 @@
         
     </xsl:template>
 
-    <xsl:template name="md2doc:test">
-        <xsl:result-document href="../test/out/output3.xml" format="docbook">
-            <xsl:processing-instruction name="xml-model">href="http://docbook.org/xml/5.0/rng/docbook.rng" schematypens="http://relaxng.org/ns/structure/1.0"</xsl:processing-instruction>
-            <xsl:processing-instruction name="xml-model">href="http://docbook.org/xml/5.0/rng/docbook.rng" type="application/xml" schematypens="http://purl.oclc.org/dsdl/schematron</xsl:processing-instruction>
-            
-            <xsl:sequence select="md2doc:convert(md2doc:read-file('../test/in/test-frag.md', 'utf-8'), 'book', 'chapter')"/>
-            
-        </xsl:result-document>
-        <xsl:result-document href="../test/out/output.xml" format="html5">
-            
-            <xsl:sequence select="md2doc:get-html(md2doc:read-file('../test/in/test-frag.md', 'utf-8'))"/>
-            
-        </xsl:result-document>
-    </xsl:template>
-
 </xsl:transform>
