@@ -44,7 +44,7 @@
     ! @param $headline-element specifies if h1 elements should be wrapped in passed element
     ! @param $savepath location and name where output should be saved (eg ../output.xml)
     -->
-    <xsl:template name="md2doc:main">
+    <xsl:template name="main">
         <xsl:param name="input" as="xs:string" select="$input"/>
         <xsl:param name="encoding" as="xs:string" select="$encoding"/>
         <xsl:param name="root-element" as="xs:string" select="$root-element"/>
@@ -66,7 +66,7 @@
     ! @param $input string to be parsed into HTML
     ! @return HTML tree
     -->
-    <xsl:template name="md2doc:get-html">
+    <xsl:template name="get-html">
         <xsl:param name="input" as="xs:string" select="$input"/>
 
         <xsl:sequence select="md2doc:get-html($input)"/>
@@ -81,7 +81,7 @@
     ! @param $headline-element specifies if h1 elements should be wrapped in passed element
     ! @return HTML tree
     -->
-    <xsl:template name="md2doc:convert">
+    <xsl:template name="convert">
         <xsl:param name="input" as="xs:string" select="$input"/>
         <xsl:param name="root-element" as="xs:string" select="$root-element"/>
         <xsl:param name="headline-element" as="xs:string" select="$headline-element"/>
