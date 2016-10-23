@@ -125,8 +125,7 @@ Markdown transformation
 
 **Md2doc supports canonical Markdown specification by John Gruber**  
 (http://daringfireball.net/projects/markdown/syntax)  
-Other extensions and variants are not supported, but there is workaround: You can use HTML instead of extensions.  
-When official blessed and widely accepted specification is released, Md2doc will conform to it.
+Other extensions and variants are not supported, but there is workaround: You can use HTML instead of extension markup.
   
 
 HTML transformation
