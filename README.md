@@ -9,13 +9,6 @@ XSL is developed under Saxon XSLT processor. See below why
    * PHP API (Saxon/C)
    * Open-source
 
-For demo, online converter or more info, please visit  
-www.markdown2docbook.com
-
-For official documentation, please visit:  
-www.documentation.markdown2docbook.com
-
-
 Features
 --------
 
